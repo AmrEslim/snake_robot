@@ -75,6 +75,7 @@ const char* htmlPage = R"rawliteral(
     <button onclick="sendAction('backward')">Backward</button>
     <button onclick="sendAction('stop')">Stop</button>
     <button onclick="sendAction('test')">Test Servos</button>
+    <button onclick="sendAction('center')" style="background-color: #28a745;">Center All Servos</button>
   </div>
   <div>
     <label for="amplitude">Amplitude:</label>
@@ -118,11 +119,25 @@ void handleRoot() {
   server.send(200, "text/html", htmlPage);
 }
 
+void centerAllServos() {
+  locomotionEnabled = false;
+  Serial.println("Centering all servos...");
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    servos[i].write(centerPosition);
+    Serial.printf("Servo %d centered to %.1f degrees\n", i, centerPosition);
+    delay(100); // Small delay between servos
+  }
+  delay(500); // Allow servos to reach position
+}
+
 void handleSetParameters() {
   String response;
   if (server.hasArg("action")) {
     String action = server.arg("action");
-    if (action == "forward") {
+    if (action == "center") {
+      centerAllServos();
+      response = "All servos centered to " + String(centerPosition) + " degrees.";
+    } else if (action == "forward") {
       locomotionEnabled = true;
       forwardDirection = true;
       response = "Moving forward.";
