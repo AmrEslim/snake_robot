@@ -9,7 +9,7 @@ WebServer server(80);
 const int NUM_SERVOS = 10;
 const int NUM_HORIZONTAL = 7;  // Number of horizontal servos
 const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; // 1=horizontal, 0=vertical
-const int servoPins[NUM_SERVOS] = {22, 23, 2, 4, 16, 17, 5, 18, 19, 21};
+const int servoPins[NUM_SERVOS] = {23, 22, 2, 4, 16, 17, 5, 18, 19, 21};
 
 Servo servos[NUM_SERVOS];
 
