@@ -2,10 +2,13 @@
 #include <WebServer.h>
 #include <ESP32Servo.h>
 #include <math.h>
+#include <ACS712.h>
+#include <SPIFFS.h>
 
 WebServer server(80);
 
 // Servo configuration
+const int analogPin = 34;
 const int NUM_SERVOS = 10;
 const int NUM_HORIZONTAL = 7;  // Number of horizontal servos
 const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; // 1=horizontal, 0=vertical
@@ -31,6 +34,12 @@ bool testingActive = false;
 int testServoIndex = 0;
 int testPosition = 0;
 unsigned long lastTestMillis = 0;
+
+//initialize the sensor
+ACS712 sensor(analogPin, 3.3, 4095, 100.0); // pin, voltage, ADC max, mV/A sensitivity
+
+// File for logging data
+File logFile;
 
 // HTML Interface
 const char* htmlPage = R"rawliteral(
@@ -124,7 +133,11 @@ const char* htmlPage = R"rawliteral(
         <option value="1">Sidewinding</option>
       </select>
     </div>
-
+    <div class="control-group">
+      <h3>Current Sensor Data</h3>
+      <p>Current Reading: <span id="currentReading">0.00</span> A</p>
+      <button onclick="downloadData()">Download Data</button>
+    </div>
     <div class="control-group">
       <button onclick="sendAction('forward')">Forward</button>
       <button onclick="sendAction('backward')">Backward</button>
@@ -185,6 +198,22 @@ const char* htmlPage = R"rawliteral(
         document.getElementById('response').innerHTML = 'Error: ' + error;
       });
     }
+    function fetchCurrentData() {
+      fetch('/current')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('currentReading').innerText = data.current.toFixed(2);
+        })
+        .catch(error => console.error('Error fetching current data:', error));
+    }
+
+    // Function to download data
+    function downloadData() {
+      window.location.href = '/download';
+    }
+
+    // Periodically fetch current data every 2 seconds
+    setInterval(fetchCurrentData, 2000);
   </script>
 </body>
 </html>
@@ -193,7 +222,81 @@ const char* htmlPage = R"rawliteral(
 void handleRoot() {
   server.send(200, "text/html", htmlPage);
 }
+void logCurrentData(float current) {
+  File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  
+  // Get timestamp (milliseconds since start)
+  unsigned long timestamp = millis();
+  
+  // Write data in CSV format
+  file.printf("%lu,%0.3f\n", timestamp, current);
+  file.close();
+}
+void handleCurrentData() {
+  float current = 0.0;
+  // Take multiple readings for better accuracy
+  for(int i = 0; i < 10; i++) {
+    current += abs(sensor.mA_DC());
+    delay(1);
+  }
+  current = (current / 10.0) / 1000.0;  // Convert to Amps
+  // Log the current data
+  logCurrentData(current);
+  String jsonResponse = "{\"current\": " + String(current, 3) + "}";
+  server.send(200, "application/json", jsonResponse);
+  
+  Serial.print("Current reading: ");
+  Serial.println(current, 3);
+}
 
+
+void handleDownload() {
+  if(!SPIFFS.exists("/current_log.txt")) {
+    server.send(404, "text/plain", "No data log found");
+    return;
+  }
+
+  File file = SPIFFS.open("/current_log.txt", "r");
+  if(!file) {
+    server.send(500, "text/plain", "Failed to open file");
+    return;
+  }
+
+  // Set up headers for file download
+  server.sendHeader("Content-Type", "text/csv");
+  server.sendHeader("Content-Disposition", "attachment; filename=current_log.csv");
+  server.sendHeader("Connection", "close");
+  
+  // Stream file to client
+  size_t fileSize = file.size();
+  server.setContentLength(fileSize);
+  
+  // Send file in chunks
+  size_t chunkSize = 1024;
+  uint8_t buf[1024];
+  while(file.available()) {
+    size_t len = file.read(buf, chunkSize);
+    server.client().write(buf, len);
+  }
+  
+  file.close();
+}
+void checkLogFileSize() {
+  if(SPIFFS.exists("/current_log.txt")) {
+    File file = SPIFFS.open("/current_log.txt", "r");
+    if(file.size() > 1000000) { // 1MB limit
+      file.close();
+      SPIFFS.remove("/current_log.txt"); // Delete and start fresh
+      Serial.println("Log file cleared due to size limit");
+    } else {
+      file.close();
+    }
+  }
+}
 void centerAllServos() {
   locomotionEnabled = false;
   testingActive = false;
@@ -241,28 +344,22 @@ void updateServosLateralUndulation() {
   float timeScale = millis() * 0.001 * frequency * 2 * PI;
   int horizontalIndex = 0;
   
-  // Adjust these parameters for optimal forward motion
-  float waveLength = 1.5;  // Number of complete waves along the body
-  float spineAngle = radians(45.0);  // Angle of wave relative to forward direction
-  
   for (int i = 0; i < NUM_SERVOS; i++) {
     if (servoLayout[i] == 1) {  // Horizontal servos
-      // Calculate phase for each segment
-      float segmentPhase = 2.0 * PI * waveLength * horizontalIndex / (NUM_HORIZONTAL - 1);
+      float segmentPhase = horizontalIndex * radians(phaseOffset);
       
       if (!forwardDirection) {
-        segmentPhase = -segmentPhase;  // Reverse wave direction for backward motion
+        // Reverse phase progression for backward motion
+        segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset);
       }
       
-      // Calculate servo angle with adjusted wave pattern
-      float angle = centerPosition + 
-                   amplitude * sin(timeScale + segmentPhase) * 
-                   cos(spineAngle);
+      // Calculate servo angle with full amplitude
+      float angle = centerPosition + amplitude * sin(timeScale + segmentPhase);
       
       servos[i].write(angle);
       horizontalIndex++;
-    } else {  // Vertical servos
-      servos[i].write(centerPosition);  // Keep vertical servos centered
+    } else {  // Vertical servos remain centered
+      servos[i].write(centerPosition);
     }
   }
 }
@@ -341,7 +438,19 @@ void handleSetParameters() {
 
 void setup() {
   Serial.begin(115200);
-  
+  pinMode(analogPin, INPUT);
+  analogReadResolution(12); // ESP32 has 12-bit ADC
+  // Calibrate sensor
+  Serial.println("Calibrating current sensor...");
+  uint16_t midPoint = sensor.autoMidPoint();
+  Serial.printf("Midpoint value: %d\n", midPoint);
+
+  // Initialize SPIFFS
+  if(!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  Serial.println("SPIFFS mounted successfully");
   // Initialize all servos
   for (int i = 0; i < NUM_SERVOS; i++) {
     servos[i].attach(servoPins[i]);
@@ -358,13 +467,19 @@ void setup() {
   // Setup server handlers
   server.on("/", HTTP_GET, handleRoot);
   server.on("/", HTTP_POST, handleSetParameters);
+  server.on("/current", HTTP_GET, handleCurrentData);  
+  server.on("/download", HTTP_GET, handleDownload);
   server.begin();
   Serial.println("HTTP server started");
 }
 
 void loop() {
   server.handleClient();
-
+  static unsigned long lastCheck = 0;
+  if (millis() - lastCheck >= 60000) { // Check every minute
+    checkLogFileSize();
+    lastCheck = millis();
+  }
   if (testingActive) {
     handleServoTest();
   }
