@@ -231,9 +231,14 @@ void logCurrentData(float current) {
   
   // Get timestamp (milliseconds since start)
   unsigned long timestamp = millis();
+   // Convert milliseconds to total seconds
+  unsigned long totalSeconds = timestamp / 1000;
+  // Calculate minutes and remaining seconds
+  unsigned long minutes = totalSeconds / 60;
+  unsigned long seconds = totalSeconds % 60;
   
-  // Write data in CSV format
-  file.printf("%lu,%0.3f\n", timestamp, current);
+  // Write data in CSV format: "minutes:seconds,current"
+  file.printf("%lu:%02lu,%0.3f\n", minutes, seconds, current);
   file.close();
 }
 void handleCurrentData() {
@@ -339,18 +344,20 @@ void handleServoTest() {
     }
   }
 }
-
 void updateServosLateralUndulation() {
   float timeScale = millis() * 0.001 * frequency * 2 * PI;
   int horizontalIndex = 0;
   
   for (int i = 0; i < NUM_SERVOS; i++) {
     if (servoLayout[i] == 1) {  // Horizontal servos
-      float segmentPhase = horizontalIndex * radians(phaseOffset);
+      float segmentPhase;
       
-      if (!forwardDirection) {
-        // Reverse phase progression for backward motion
+      if (forwardDirection) {
+        // For forward motion, we need to reverse the phase progression
         segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset);
+      } else {
+        // For backward motion, use the original phase progression
+        segmentPhase = horizontalIndex * radians(phaseOffset);
       }
       
       // Calculate servo angle with full amplitude
@@ -372,14 +379,20 @@ void updateServosSidewinding() {
   for (int i = 0; i < NUM_SERVOS; i++) {
     if (servoLayout[i] == 1) {  // Horizontal servos
       float phase = forwardDirection ? 
-        radians(horizontalIndex * phaseOffset) : 
-        radians((NUM_HORIZONTAL - 1 - horizontalIndex) * phaseOffset);
+        radians((NUM_HORIZONTAL - 1 - horizontalIndex) * phaseOffset) : 
+        radians(horizontalIndex * phaseOffset);
       
       float angle = centerPosition + amplitude * sin(timeScale + phase);
       servos[i].write(angle);
       horizontalIndex++;
     } else {  // Vertical servos
-      float phase = radians(verticalIndex * phaseOffset + verticalPhaseOffset);
+      // Adjust the vertical wave phase based on direction as well
+      float basePhase = verticalIndex * phaseOffset + verticalPhaseOffset;
+      // You might need to experiment with this part to get the right behavior
+      float phase = forwardDirection ? 
+        radians((NUM_SERVOS - NUM_HORIZONTAL - 1 - verticalIndex) * phaseOffset + verticalPhaseOffset) : 
+        radians(basePhase);
+      
       float angle = centerPosition + verticalAmplitude * sin(timeScale + phase);
       servos[i].write(angle);
       verticalIndex++;
