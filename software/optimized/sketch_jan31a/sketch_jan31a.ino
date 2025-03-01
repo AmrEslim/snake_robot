@@ -136,7 +136,10 @@ const char* htmlPage = R"rawliteral(
     <div class="control-group">
       <h3>Current Sensor Data</h3>
       <p>Current Reading: <span id="currentReading">0.00</span> A</p>
-      <button onclick="downloadData()">Download Data</button>
+      <div style="display: flex; justify-content: center; gap: 10px;">
+        <button onclick="downloadData()">Download Data</button>
+        <button onclick="clearLogData()" class="danger">Clear Log</button>
+      </div>
     </div>
     <div class="control-group">
       <button onclick="sendAction('forward')">Forward</button>
@@ -211,6 +214,21 @@ const char* htmlPage = R"rawliteral(
     function downloadData() {
       window.location.href = '/download';
     }
+    
+    // Function to clear log data
+    function clearLogData() {
+      if (confirm('Are you sure you want to clear all logged data?')) {
+        fetch('/clearlog')
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById('response').innerHTML = data;
+            setTimeout(() => document.getElementById('response').innerHTML = '', 3000);
+          })
+          .catch(error => {
+            document.getElementById('response').innerHTML = 'Error: ' + error;
+          });
+      }
+    }
 
     // Periodically fetch current data every 2 seconds
     setInterval(fetchCurrentData, 2000);
@@ -222,6 +240,7 @@ const char* htmlPage = R"rawliteral(
 void handleRoot() {
   server.send(200, "text/html", htmlPage);
 }
+
 void logCurrentData(float current) {
   File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
   if(!file) {
@@ -231,7 +250,7 @@ void logCurrentData(float current) {
   
   // Get timestamp (milliseconds since start)
   unsigned long timestamp = millis();
-   // Convert milliseconds to total seconds
+  // Convert milliseconds to total seconds
   unsigned long totalSeconds = timestamp / 1000;
   // Calculate minutes and remaining seconds
   unsigned long minutes = totalSeconds / 60;
@@ -241,6 +260,7 @@ void logCurrentData(float current) {
   file.printf("%lu:%02lu,%0.3f\n", minutes, seconds, current);
   file.close();
 }
+
 void handleCurrentData() {
   float current = 0.0;
   // Take multiple readings for better accuracy
@@ -257,7 +277,6 @@ void handleCurrentData() {
   Serial.print("Current reading: ");
   Serial.println(current, 3);
 }
-
 
 void handleDownload() {
   if(!SPIFFS.exists("/current_log.txt")) {
@@ -290,6 +309,23 @@ void handleDownload() {
   
   file.close();
 }
+
+// Handle clearing the log file
+void handleClearLog() {
+  if(SPIFFS.exists("/current_log.txt")) {
+    if(SPIFFS.remove("/current_log.txt")) {
+      server.send(200, "text/plain", "Log file cleared successfully");
+      Serial.println("Log file cleared by user request");
+    } else {
+      server.send(500, "text/plain", "Failed to clear log file");
+      Serial.println("Failed to clear log file");
+    }
+  } else {
+    server.send(200, "text/plain", "No log file exists");
+    Serial.println("Clear log requested but no file exists");
+  }
+}
+
 void checkLogFileSize() {
   if(SPIFFS.exists("/current_log.txt")) {
     File file = SPIFFS.open("/current_log.txt", "r");
@@ -302,6 +338,7 @@ void checkLogFileSize() {
     }
   }
 }
+
 void centerAllServos() {
   locomotionEnabled = false;
   testingActive = false;
@@ -344,6 +381,7 @@ void handleServoTest() {
     }
   }
 }
+
 void updateServosLateralUndulation() {
   float timeScale = millis() * 0.001 * frequency * 2 * PI;
   int horizontalIndex = 0;
@@ -482,6 +520,7 @@ void setup() {
   server.on("/", HTTP_POST, handleSetParameters);
   server.on("/current", HTTP_GET, handleCurrentData);  
   server.on("/download", HTTP_GET, handleDownload);
+  server.on("/clearlog", HTTP_GET, handleClearLog);
   server.begin();
   Serial.println("HTTP server started");
 }
