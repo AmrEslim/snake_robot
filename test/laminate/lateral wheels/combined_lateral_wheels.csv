@@ -1,4 +1,4 @@
-Zeit (ms),Markierung 1_displacement,Markierung 2_displacement,Markierung 1_speed,Markierung 2_speed
+Zeit (ms),Markierung_1_vertical_displacement (m),Markierung_2_vertical_displacement,Markierung_1_horizontal_speed(m/S),Markierung_2_horizontal_speed
 6,0.0,0.0,0.03322198,-0.09008206
 22,-0.1219368,0.1459446,0.03719609,-0.1173414
 39,-0.2581444,0.3592739,0.04117021,-0.1446007

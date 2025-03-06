@@ -1,4 +1,4 @@
-Zeit (ms),Markierung 2_horizontal,Markierung 1_horizontal,Markierung 2_vertical,Markierung 1_vertical
+Zeit (ms),Markierung2_horizontal_speed (meter per second),Markierung 1_horizontal_speed(meter per second),Markierung 2_vertical_deviation (m),Markierung 1_vertical_deviation(m)
 9,-0.01609121,-0.01084939,0.0,0.0
 26,-0.01198154,-0.00871728,0.03244781,0.03107452
 42,-0.007871864,-0.006585169,0.05660439,0.05367088

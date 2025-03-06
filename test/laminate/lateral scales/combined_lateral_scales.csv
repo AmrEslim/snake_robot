@@ -1,4 +1,4 @@
-Zeit (ms),Markierung 2,Markierung 1,Markierung 2_horizontal_speed,Markierung 1_horizontal_speed,Markierung 2_vertical_displacement,Markierung 1_vertical_displacement,Markierung 2_vertical_speed,Markierung 1_vertical_speed
+Zeit (ms),Markierung 2_horizontal_displacement (m),Markierung 1_horizontal_displacement,Markierung 2_horizontal_speed(m/s),Markierung 1_horizontal_speed,Markierung 2_vertical_displacement,Markierung 1_vertical_displacement,Markierung 2_vertical_speed,Markierung 1_vertical_speed
 -8,0,0,"-0,01076899","-0,01448524",0,0,"0,02661498","0,002031514"
 9,"-0,01597977","-0,0201683","-0,008092362","-0,01015947","0,03543949","0,00352478","0,01846365","0,001920587"
 26,"-0,02717972","-0,03412247","-0,005415731","-0,005833695","0,06201363","0,006450653","0,01031232","0,001809661"
