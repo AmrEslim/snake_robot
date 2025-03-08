@@ -35,6 +35,13 @@ int testServoIndex = 0;
 int testPosition = 0;
 unsigned long lastTestMillis = 0;
 
+// Logging variables
+bool loggingEnabled = false;
+unsigned long loggingStartTime = 0;
+unsigned long lastLogTime = 0;
+const unsigned long LOGGING_DURATION = 10000; // 10 seconds in milliseconds
+const unsigned long LOGGING_INTERVAL = 100; // Log every 100ms (10Hz)
+
 //initialize the sensor
 ACS712 sensor(analogPin, 3.3, 4095, 100.0); // pin, voltage, ADC max, mV/A sensitivity
 
@@ -86,6 +93,10 @@ const char* htmlPage = R"rawliteral(
     button.success {
       background-color: #28a745;
     }
+    button.warning {
+      background-color: #ffc107;
+      color: #212529;
+    }
     input, select { 
       width: 120px; 
       text-align: center;
@@ -136,9 +147,11 @@ const char* htmlPage = R"rawliteral(
     <div class="control-group">
       <h3>Current Sensor Data</h3>
       <p>Current Reading: <span id="currentReading">0.00</span> A</p>
+      <p>Logging Status: <span id="loggingStatus">Inactive</span></p>
       <div style="display: flex; justify-content: center; gap: 10px;">
         <button onclick="downloadData()">Download Data</button>
         <button onclick="clearLogData()" class="danger">Clear Log</button>
+        <button onclick="sendAction('logIdle')" class="warning">Log Idle (10s)</button>
       </div>
     </div>
     <div class="control-group">
@@ -206,6 +219,7 @@ const char* htmlPage = R"rawliteral(
         .then(response => response.json())
         .then(data => {
           document.getElementById('currentReading').innerText = data.current.toFixed(2);
+          document.getElementById('loggingStatus').innerText = data.logging ? 'Active' : 'Inactive';
         })
         .catch(error => console.error('Error fetching current data:', error));
     }
@@ -230,8 +244,8 @@ const char* htmlPage = R"rawliteral(
       }
     }
 
-    // Periodically fetch current data every 2 seconds
-    setInterval(fetchCurrentData, 2000);
+    // Periodically fetch current data every 30 milli seconds
+    setInterval(fetchCurrentData, 30);
   </script>
 </body>
 </html>
@@ -242,22 +256,19 @@ void handleRoot() {
 }
 
 void logCurrentData(float current) {
+  if (!loggingEnabled) return;
+  
   File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
   if(!file) {
     Serial.println("Failed to open file for appending");
     return;
   }
   
-  // Get timestamp (milliseconds since start)
-  unsigned long timestamp = millis();
-  // Convert milliseconds to total seconds
-  unsigned long totalSeconds = timestamp / 1000;
-  // Calculate minutes and remaining seconds
-  unsigned long minutes = totalSeconds / 60;
-  unsigned long seconds = totalSeconds % 60;
+  // Calculate time in seconds since logging started (with millisecond precision)
+  float elapsedTime = (millis() - loggingStartTime) / 1000.0;
   
-  // Write data in CSV format: "minutes:seconds,current"
-  file.printf("%lu:%02lu,%0.3f\n", minutes, seconds, current);
+  // Write data in CSV format: "seconds,current"
+  file.printf("%.3f,%.3f\n", elapsedTime, current);
   file.close();
 }
 
@@ -269,13 +280,22 @@ void handleCurrentData() {
     delay(1);
   }
   current = (current / 10.0) / 1000.0;  // Convert to Amps
-  // Log the current data
-  logCurrentData(current);
-  String jsonResponse = "{\"current\": " + String(current, 3) + "}";
+  
+  String jsonResponse = "{\"current\": " + String(current, 3) + ", \"logging\": " + (loggingEnabled ? "true" : "false") + "}";
   server.send(200, "application/json", jsonResponse);
   
-  Serial.print("Current reading: ");
-  Serial.println(current, 3);
+  // Only print to serial occasionally to avoid slowing things down
+  static unsigned long lastPrintTime = 0;
+  if (millis() - lastPrintTime > 500) { // Print every 500ms
+    Serial.print("Current reading: ");
+    Serial.println(current, 3);
+    if (loggingEnabled) {
+      Serial.print("Logging: ");
+      Serial.print((millis() - loggingStartTime) / 1000.0);
+      Serial.println(" seconds elapsed");
+    }
+    lastPrintTime = millis();
+  }
 }
 
 void handleDownload() {
@@ -295,9 +315,13 @@ void handleDownload() {
   server.sendHeader("Content-Disposition", "attachment; filename=current_log.csv");
   server.sendHeader("Connection", "close");
   
+  // Add CSV header row for better readability
+  String csvHeader = "Time(s),Current(A)\r\n";
+  server.client().write((const uint8_t*)csvHeader.c_str(), csvHeader.length());
+  
   // Stream file to client
   size_t fileSize = file.size();
-  server.setContentLength(fileSize);
+  server.setContentLength(fileSize + csvHeader.length());
   
   // Send file in chunks
   size_t chunkSize = 1024;
@@ -326,17 +350,16 @@ void handleClearLog() {
   }
 }
 
-void checkLogFileSize() {
+void startLogging() {
+  // Clear existing log if it exists
   if(SPIFFS.exists("/current_log.txt")) {
-    File file = SPIFFS.open("/current_log.txt", "r");
-    if(file.size() > 1000000) { // 1MB limit
-      file.close();
-      SPIFFS.remove("/current_log.txt"); // Delete and start fresh
-      Serial.println("Log file cleared due to size limit");
-    } else {
-      file.close();
-    }
+    SPIFFS.remove("/current_log.txt");
   }
+  
+  loggingEnabled = true;
+  loggingStartTime = millis();
+  lastLogTime = millis(); // Reset the last log time
+  Serial.println("Logging started for 10 seconds at 10Hz");
 }
 
 void centerAllServos() {
@@ -454,13 +477,16 @@ void handleSetParameters() {
     } else if (action == "forward") {
       locomotionEnabled = true;
       forwardDirection = true;
-      response = "Forward motion enabled";
+      startLogging(); // Start logging when forward movement begins
+      response = "Forward motion enabled (logging for 10 seconds)";
     } else if (action == "backward") {
       locomotionEnabled = true;
       forwardDirection = false;
-      response = "Backward motion enabled";
+      startLogging(); // Start logging when backward movement begins
+      response = "Backward motion enabled (logging for 10 seconds)";
     } else if (action == "stop") {
       locomotionEnabled = false;
+      loggingEnabled = false; // Stop logging when movement stops
       centerAllServos();
       response = "Stopped and centered";
     } else if (action == "test") {
@@ -468,6 +494,13 @@ void handleSetParameters() {
       testServoIndex = 0;
       testPosition = 0;
       response = "Starting servo test...";
+    } else if (action == "logIdle") {
+      // Make sure the robot is not moving
+      locomotionEnabled = false;
+      testingActive = false;
+      // Start logging while in idle state
+      startLogging();
+      response = "Logging idle state for 10 seconds";
     }
   }
 
@@ -527,11 +560,8 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  static unsigned long lastCheck = 0;
-  if (millis() - lastCheck >= 60000) { // Check every minute
-    checkLogFileSize();
-    lastCheck = millis();
-  }
+  
+  // Handle servo operations
   if (testingActive) {
     handleServoTest();
   }
@@ -542,5 +572,26 @@ void loop() {
       updateServosSidewinding();
     }
     lastUpdate = millis();
+  }
+  
+  // Handle logging at fixed intervals
+  if (loggingEnabled) {
+    // Check if logging duration has expired
+    if (millis() - loggingStartTime >= LOGGING_DURATION) {
+      loggingEnabled = false;
+      Serial.println("Logging stopped after 10 seconds");
+    } 
+    // Log at fixed intervals
+    else if (millis() - lastLogTime >= LOGGING_INTERVAL) {
+      // Take a current reading
+      float current = 0.0;
+      for(int i = 0; i < 5; i++) { // Take fewer samples for speed
+        current += abs(sensor.mA_DC());
+      }
+      current = (current / 5.0) / 1000.0;  // Convert to Amps
+      
+      logCurrentData(current);
+      lastLogTime = millis();
+    }
   }
 }
