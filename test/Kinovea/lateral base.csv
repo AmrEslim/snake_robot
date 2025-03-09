@@ -1,4 +1,4 @@
-Time (ms),Head_base0_hor,tail_base0_hor,Head_base0_ver,tail_base0_ver,Tail_base1_hor,Head_base1_hor,Tail_base1_ver,Head_base1_ver,Tail_base2_hor,Head_base2_hor,Tail_base2_ver,Head_base2_ver
+Time (ms),Head_base0_horizontal-displacement,tail_base0_horizontal-displacement,Head_base0_vertical-displacement,tail_base0_vertical-displacement,Tail_base1_horizontal-displacement,Head_base1_horizontal-displacement,Tail_base1_vertical-displacement,Head_base1_vertical-displacement,Tail_base2_horizontal-displacement,Head_base2_horizontal-displacement,Tail_base2_vertical-displacement,Head_base2_vertical-displacement
 0,,,,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
 2,0.0,0.0,0.0,0.0,,,,,,,,
 17,,,,,-0.1748962,-0.02835083,0.2876797,0.003967285,-0.04088593,-0.001983643,0.00535202,0.01750946
