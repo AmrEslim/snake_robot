@@ -763,10 +763,13 @@ function App() {
                 dataKey="value"
                 name="Displacement"
                 domain={[-1.5, 1.5]}
+                tickFormatter={(value) => value.toFixed(2)}
                 label={{
-                  value: "Horizontal Displacement",
+                  value: "Horizontal Displacement (cm)",
                   angle: -90,
                   position: "insideLeft",
+                  offset: -10,
+                  style: { textAnchor: "middle" },
                 }}
               />
               <Tooltip
@@ -822,10 +825,13 @@ function App() {
                 dataKey="value"
                 name="Displacement"
                 domain={[-1.5, 1.5]}
+                tickFormatter={(value) => value.toFixed(2)}
                 label={{
-                  value: "Vertical Displacement",
+                  value: "Vertical Displacement (cm)",
                   angle: -90,
                   position: "insideLeft",
+                  offset: -10,
+                  style: { textAnchor: "middle" },
                 }}
               />
               <Tooltip
