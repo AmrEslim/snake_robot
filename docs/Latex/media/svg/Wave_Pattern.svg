@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500">
+  <!-- Background -->
+  <rect width="900" height="500" fill="white"/>
+  
+  <!-- Grid -->
+  <g stroke="#eee" stroke-width="1">
+    <!-- Vertical grid lines -->
+    <line x1="100" y1="50" x2="100" y2="450" />
+    <line x1="200" y1="50" x2="200" y2="450" />
+    <line x1="300" y1="50" x2="300" y2="450" />
+    <line x1="400" y1="50" x2="400" y2="450" />
+    <line x1="500" y1="50" x2="500" y2="450" />
+    <line x1="600" y1="50" x2="600" y2="450" />
+    <line x1="700" y1="50" x2="700" y2="450" />
+    <line x1="800" y1="50" x2="800" y2="450" />
+    
+    <!-- Horizontal grid lines -->
+    <line x1="50" y1="150" x2="850" y2="150" />
+    <line x1="50" y1="250" x2="850" y2="250" />
+    <line x1="50" y1="350" x2="850" y2="350" />
+  </g>
+  
+  <!-- Axes -->
+  <g stroke="#000" stroke-width="2">
+    <line x1="50" y1="250" x2="850" y2="250" /> <!-- x-axis: Time -->
+    <line x1="50" y1="50" x2="50" y2="450" /> <!-- y-axis: Servo angle -->
+  </g>
+  
+  <!-- Axis labels -->
+  <text x="450" y="490" text-anchor="middle" font-family="Arial" font-size="16">Time (t)</text>
+  <text x="20" y="250" text-anchor="middle" font-family="Arial" font-size="16" transform="rotate(-90, 20, 250)">Servo angle (θ)</text>
+  
+  <!-- Center position line -->
+  <line x1="50" y1="250" x2="850" y2="250" stroke="#888" stroke-width="1" stroke-dasharray="5,5" />
+  <text x="75" y="270" font-family="Arial" font-size="12" fill="#888">90°</text>
+  
+  <!-- Sine waves for each servo with different phase offsets -->
+  <!-- Servo 1 (Head) -->
+  <path d="M50,250 C100,150 200,350 250,250 C300,150 400,350 450,250 C500,150 600,350 650,250 C700,150 800,350 850,250" 
+        fill="none" stroke="#FF0000" stroke-width="3"/>
+  
+  <!-- Servo 2 -->
+  <path d="M50,190 C100,90 200,290 250,190 C300,90 400,290 450,190 C500,90 600,290 650,190 C700,90 800,290 850,190" 
+        fill="none" stroke="#FF6600" stroke-width="3"/>
+  
+  <!-- Servo 3 -->
+  <path d="M50,150 C100,50 200,250 250,150 C300,50 400,250 450,150 C500,50 600,250 650,150 C700,50 800,250 850,150" 
+        fill="none" stroke="#FFCC00" stroke-width="3"/>
+  
+  <!-- Servo 4 -->
+  <path d="M50,170 C100,70 200,270 250,170 C300,70 400,270 450,170 C500,70 600,270 650,170 C700,70 800,270 850,170" 
+        fill="none" stroke="#66CC00" stroke-width="3"/>
+  
+  <!-- Servo 5 -->
+  <path d="M50,250 C100,350 200,150 250,250 C300,350 400,150 450,250 C500,350 600,150 650,250 C700,350 800,150 850,250" 
+        fill="none" stroke="#0099CC" stroke-width="3"/>
+  
+  <!-- Servo 6 -->
+  <path d="M50,310 C100,410 200,210 250,310 C300,410 400,210 450,310 C500,410 600,210 650,310 C700,410 800,210 850,310" 
+        fill="none" stroke="#6633CC" stroke-width="3"/>
+  
+  <!-- Servo 7 (Tail) -->
+  <path d="M50,350 C100,450 200,250 250,350 C300,450 400,250 450,350 C500,450 600,250 650,350 C700,450 800,250 850,350" 
+        fill="none" stroke="#CC33CC" stroke-width="3"/>
+  
+  <!-- Snake illustrations at different time points -->
+  <!-- t = 0 -->
+  <g transform="translate(100, 70)">
+    <rect x="-30" y="-20" width="60" height="40" fill="white" stroke="#ccc" />
+    <path d="M-20,0 C-10,-15 10,-15 20,0" fill="none" stroke="#FF0000" stroke-width="2"/>
+    <path d="M-20,0 C-10,15 10,15 20,0" fill="none" stroke="#0099CC" stroke-width="2"/>
+    <circle cx="-20" cy="0" r="3" fill="#FF0000"/>
+    <text x="0" y="-25" text-anchor="middle" font-family="Arial" font-size="12">t = 0</text>
+  </g>
+  
+  <!-- t = T/4 -->
+  <g transform="translate(300, 70)">
+    <rect x="-30" y="-20" width="60" height="40" fill="white" stroke="#ccc" />
+    <path d="M-20,-5 C-10,-15 10,-5 20,5" fill="none" stroke="#FF0000" stroke-width="2"/>
+    <path d="M-20,-5 C-10,5 10,15 20,5" fill="none" stroke="#0099CC" stroke-width="2"/>
+    <circle cx="-20" cy="-5" r="3" fill="#FF0000"/>
+    <text x="0" y="-25" text-anchor="middle" font-family="Arial" font-size="12">t = T/4</text>
+  </g>
+  
+  <!-- t = T/2 -->
+  <g transform="translate(500, 70)">
+    <rect x="-30" y="-20" width="60" height="40" fill="white" stroke="#ccc" />
+    <path d="M-20,0 C-10,15 10,15 20,0" fill="none" stroke="#FF0000" stroke-width="2"/>
+    <path d="M-20,0 C-10,-15 10,-15 20,0" fill="none" stroke="#0099CC" stroke-width="2"/>
+    <circle cx="-20" cy="0" r="3" fill="#FF0000"/>
+    <text x="0" y="-25" text-anchor="middle" font-family="Arial" font-size="12">t = T/2</text>
+  </g>
+  
+  <!-- t = 3T/4 -->
+  <g transform="translate(700, 70)">
+    <rect x="-30" y="-20" width="60" height="40" fill="white" stroke="#ccc" />
+    <path d="M-20,5 C-10,15 10,5 20,-5" fill="none" stroke="#FF0000" stroke-width="2"/>
+    <path d="M-20,5 C-10,-5 10,-15 20,-5" fill="none" stroke="#0099CC" stroke-width="2"/>
+    <circle cx="-20" cy="5" r="3" fill="#FF0000"/>
+    <text x="0" y="-25" text-anchor="middle" font-family="Arial" font-size="12">t = 3T/4</text>
+  </g>
+  
+  <!-- Legend -->
+  <g transform="translate(150, 430)">
+    <rect x="0" y="0" width="600" height="30" fill="white" stroke="#ccc"/>
+    <text x="10" y="20" font-family="Arial" font-size="14">Servo position: </text>
+    <line x1="120" y1="15" x2="145" y2="15" stroke="#FF0000" stroke-width="3"/>
+    <text x="150" y="20" font-family="Arial" font-size="14">Head</text>
+    <line x1="200" y1="15" x2="225" y2="15" stroke="#FFCC00" stroke-width="3"/>
+    <text x="230" y="20" font-family="Arial" font-size="14">Middle</text>
+    <line x1="300" y1="15" x2="325" y2="15" stroke="#CC33CC" stroke-width="3"/>
+    <text x="330" y="20" font-family="Arial" font-size="14">Tail</text>
+    <text x="400" y="20" font-family="Arial" font-size="14">Wave propagation →</text>
+    <text x="590" y="20" font-family="Arial" font-size="14" fill="#888">90°= Center</text>
+  </g>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold">Lateral Undulation: Phase Relationship Between Segments</text>
+</svg>
