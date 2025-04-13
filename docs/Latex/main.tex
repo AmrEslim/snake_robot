@@ -1,17 +1,68 @@
 \documentclass[12pt,a4paper]{report}
-\usepackage[a4paper, margin=2.5cm]{geometry}  % Following HTW guidelines
+\usepackage[a4paper, margin=2.5cm]{geometry} 
 \usepackage{graphicx}
 \usepackage{float}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{amsmath, amssymb}
 \usepackage{listings}
-\usepackage[backend=biber,style=ieee,sorting=nty]{biblatex}
+\usepackage[backend=biber,style=ieee,sorting=nty,maxnames=1,minnames=1]{biblatex}
 \usepackage{csquotes}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage[utf8]{inputenc}
 \usepackage{placeins}
 \usepackage{float}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+\usepackage{tikz}
+\usepackage{minted}
+\usepackage{xmpmulti}
+\usepackage{animate}
+\usepackage{multido}
+\usepackage{svg}
+\usetikzlibrary{snakes}
+\usepackage{adjustbox}
+\usepackage{pdfpages} 
+\usepackage{chngcntr}
+\usepackage{times}          % For Times New Roman font
+\usepackage{microtype}      % For better typography in justified text
+\usepackage{fancyhdr}       % For header and footer
+\usepackage{ragged2e}       % For better justification
+\usepackage{titlesec}       % For heading formatting
+% Document settings according to university requirements
+\renewcommand{\baselinestretch}{1.3}  % Line spacing between 1 and 1.3
+\setlength{\parindent}{0pt}           % No paragraph indentation
+\setlength{\parskip}{6pt}             % Paragraph spacing
+
+% Make sure figures and tables are numbered continuously
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+% Justify text with hyphenation
+\hyphenpenalty=1000
+\tolerance=1000
+\emergencystretch=\maxdimen
+\hbadness=10000
+\doublehyphendemerits=10000
+\finalhyphendemerits=5000
+
+% Format chapter and section headings to make them stand out
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+{\normalfont\large\bfseries}{\thesection}{1em}{}
+\titlespacing*{\chapter}{0pt}{50pt}{40pt}
+% Set up headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}    % Chapter name in the header
+\fancyhead[R]{\thepage}     % Page number in the header
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{     % Style for chapter pages
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
     
 \addbibresource{references.bib}
 
@@ -20,58 +71,70 @@
 \setlength{\parindent}{0pt}  % No paragraph indentation
 \setlength{\parskip}{6pt}    % Paragraph spacing
 
+\titleformat{\chapter}[hang]
+  {\normalfont\bfseries\Large}{\thechapter.}{10pt}{}
+
+
 \begin{document}
+% Include the title page
 % Include the title page
 \begin{titlepage}
     \centering
-    \vspace*{1cm}
+    \vspace*{0.5cm}
     % University logo at the top
-    \includegraphics[width=0.3\textwidth]{media/Logo_HTW_Berlin.eps}\par\vspace{1cm}
-    
-    % University name
-    {\Large HTW Berlin\par}\vspace{0.5cm}
-    
-    % Thesis title
-    {\Huge\bfseries Neurobiologisch inspirierte Steuerung eines Roboters\par}\vspace{0.5cm}
-    
-    % Thesis type and your name
-    {\Large Bachelorarbeit\par}\vspace{0.5cm}
-    {\Large Amr Eslim\par}\vspace{0.5cm}
-    
-    % Supervisors information
-    {\Large Erstbetreuer: Prof. Dr. Jochen Kerdels\par}\vspace{0.3cm}
-    {\Large Zweitbetreuer: Prof. Dr. Frank Bauernöppel\par}\vspace{0.8cm}
-    
-    % Snake robot image at the bottom
-    \includegraphics[width=0.3\textwidth]{media/snake_robot.jpg}\par\vspace{0.5cm}
-    
-    % Date (or submission details)
-    {\Large \today\par}
+    \includegraphics[width=0.4\textwidth]{media/Logo_HTW_Berlin}
+
+    \vspace{1cm}
+    \rule{\linewidth}{0.5mm}\\[0.4cm]
+    {\Huge \textbf{Neurobiologically inspired control of a robot}}\\[0.3cm]
+    \rule{\linewidth}{0.5mm}\\[1.5cm]
+
+    {\LARGE Bachelorarbeit}\\[1.0cm]
+
+    {\Large Computer Engineering}\\[1cm]
+
+    {\large vorgelegt von}\\[0.3cm]
+    {\Large Amr Eslim}\\[0.8cm]
+
+    {\large Fachbereich 1}\\[1.0cm]
+
+    {\large \textbf{Datum:}}\\
+    {\large Berlin, \today}\\[1.0cm]
+
+    {\large \textbf{Erstgutachter:} Prof. Dr. Jochen Kerdels}\\[0.3cm]
+    {\large \textbf{Zweitgutachter:} Prof. Dr. Frank Bauernöppel}\\[1.5cm]
+
+    % \includegraphics[width=0.3\textwidth]{media/snake_robot.jpg}
 \end{titlepage}
 
 
 
+\begin{abstract}
+This thesis presents the design, implementation, and experimental evaluation of a neurobiologically inspired snake-like robot. Drawing from the locomotion mechanisms observed in biological snakes, the research develops a modular robotic system capable of executing multiple biologically authentic movement patterns. The work focuses on implementing Central Pattern Generator (CPG) inspired control algorithms to generate coordinated undulatory movements across the robot's segmented body. A 10-servo design with alternating horizontal and vertical actuation planes enables both lateral undulation and sidewinding locomotion patterns. The system utilizes an ESP32 microcontroller with WiFi connectivity to provide real-time control and parameter adjustment through a web-based interface. Three distinct robot configurations (baseline, with TPU-printed scales, and with PLA+ printed wheels) are experimentally evaluated to determine their effects on locomotion performance and energy consumption. Motion tracking analysis reveals differences in movement patterns between configurations, with wheels providing the most uniform progression during lateral undulation. Energy consumption measurements demonstrate that sidewinding requires more power than lateral undulation, and friction elements increase power requirements as well. The findings highlight the complex interplay between mechanical configuration, control parameters, and environmental interactions in biomimetic locomotion. This research contributes to the field of bioinspired robotics by providing insight into the design principles and control strategies for effective snake-like locomotion, with potential applications in search and rescue, pipeline inspection, and educational contexts.
+\end{abstract}
 
-
-
-% Abstract
-% \begin{abstract}
-% This thesis presents the development and implementation of a bio-inspired snake robot, focusing on the integration of biological locomotion principles with modern robotics. The project encompasses multiple design iterations, addressing both hardware challenges and control system development. Key contributions include the implementation of various locomotion algorithms inspired by real snake movement patterns, particularly focusing on lateral undulation and serpentine motion. The development process involved creating a modular design using servo motors for precise movement control, implementing a sophisticated control system using CPG (Central Pattern Generator) principles, and extensive testing across different terrain types. Results demonstrate successful implementation of bio-inspired locomotion patterns, with quantitative analysis of movement efficiency and adaptability across various surfaces. This work contributes to the field of bio-inspired robotics by providing detailed insights into the development process and practical implementation of snake-like locomotion mechanisms.
-% \end{abstract}
-% \begin{abstract}
-% This thesis presents the development and implementation of a bio-inspired snake robot control system. The focus is on replicating natural snake locomotion patterns through a modular robotic platform. A key contribution is the implementation of Central Pattern Generator (CPG) based control algorithms that enable smooth, coordinated movement. The system integrates joystick control for manual operation while maintaining biologically-inspired motion patterns. Testing demonstrates successful implementation of lateral undulation and other snake-like movements across different surfaces.
-% \end{abstract}
-
+\includepdf[pages=-]{Eigenstaendigkeitserklaerung.pdf}
+% Start Roman numeral page numbering
+\pagenumbering{Roman}
 % Table of Contents
 \tableofcontents
 \listoffigures
+\newpage
 \listoftables
-
-
-\chapter{Introduction}
+\newpage
+% Start Arabic numeral page numbering with Introduction
+\cleardoublepage
+\pagenumbering{arabic}
+%//////////////////
+%//////////////////
+%chapter 1
+%//////////////////
+%//////////////////
+\chapter{ Introduction}
+Snake-like robots represent a fascinating intersection of biological inspiration and robotic engineering, offering unique mobility solutions for complex environments. This chapter establishes the foundation for understanding bio-inspired snake robotics, examining the research context, motivations, and key objectives that drive this field forward. 
 
 \section{Background and Motivation}
-Snake robots have emerged as a promising technological innovation inspired by the locomotion mechanisms observed in biological snakes. These robots exhibit exceptional adaptability in navigating confined spaces and overcoming challenging terrains where conventional wheeled or legged robots struggle. Their unique ability to generate smooth and continuous movements makes them particularly suitable for applications such as search-and-rescue missions, pipeline inspection, and medical procedures requiring minimally invasive interventions \textcite{transeth-2009, Hirose2004}.
+Snake robots have emerged as a promising technological innovation inspired by the locomotion mechanisms observed in biological snakes. These robots exhibit exceptional adaptability in navigating confined spaces and overcoming challenging terrains where conventional wheeled or legged robots struggle. Their unique ability to generate smooth and continuous movements makes them particularly suitable for applications such as search-and-rescue missions, pipeline inspection, and medical procedures requiring minimally invasive interventions \cite{transeth-2009, Hirose2004}.
 
 The fundamental advantage of snake-like robots lies in their ability to replicate the efficient and versatile locomotion strategies of real snakes. By leveraging undulatory movements, these robots can traverse irregular surfaces, maneuver through narrow gaps, and maintain stability on diverse terrain \textcite{Seeja2022}. The inspiration from biological systems, coupled with advances in robotic control, has led to significant progress in the field, paving the way for innovative robotic applications.
 
@@ -86,38 +149,21 @@ This research aims to contribute to the development of bio-inspired snake robots
     \item Integrate a robust hardware and software control system to ensure reliable operation and real-time adaptability in dynamic conditions.
 \end{itemize}
 
+\section{Paper Structure}
+Following the introduction, this thesis proceeds with a chapter on the state of the art, covering biological principles of snake locomotion as well as the historical development and current research status on snake robots and CPG networks. The third chapter presents the system design and implementation of the snake robot, including mechanical construction using Onshape, 3D printing, and integration of the ESP32 microcontroller with ten servo motors. The fourth chapter details the experimental results, analyzing movement patterns and power consumption. Finally, the thesis concludes with a summary of research findings, limitations of the current implementation, and suggestions for future improvements. Supplementary technical documentation regarding hardware and software is provided in the appendix.
 
-\section{Thesis Structure}
-
-This thesis is structured into multiple chapters, each covering a key aspect of the development and control of a bio-inspired snake robot. The chapters are organized as follows:
-
-\paragraph{Chapter 1: Introduction} 
-This chapter provides an overview of the research background, motivation, and objectives. It introduces the concept of neurobiologically inspired control in robotics, emphasizing the importance of Central Pattern Generators (CPGs) for snake-like locomotion. The scope, research questions, and structure of the thesis are also outlined.
-
-\paragraph{Chapter 2: State of the Art} 
-This chapter reviews the biological principles of snake locomotion, including natural movement patterns and biomechanics. It also explores the historical development and current state of snake robot research, covering simulation and modeling approaches, biologically inspired robotic designs, and neurological models for locomotion control. Special focus is given to the mathematical representation of CPG networks.
-
-\paragraph{Chapter 3: System Design, Implementation, and Details} 
-This chapter describes the hardware architecture, including mechanical design using Onshape, 3D printing, and integration of the ESP32 microcontroller with 10 servo motors. The electronic architecture, control system configuration, WiFi-based communication, and core control parameters are detailed. It also discusses the implementation of movement algorithms such as lateral undulation and sidewinding.
-
-\paragraph{Chapter 4: Experimental Results and Analysis} 
-This chapter presents the performance evaluation of the snake robot. It includes detailed analyses of movement efficiency, optimization of control parameters, and testing under different environmental conditions. Specific evaluations include motion pattern analysis, power consumption, WiFi communication performance, endurance testing, and failure mode analysis.
-
-\paragraph{Chapter 5: Conclusion and Future Work} 
-The final chapter summarizes the research findings and contributions. It discusses the limitations of the current implementation and suggests directions for future improvements, including enhanced mechanical design, advanced control algorithms, and extended applications.
-
-\paragraph{Appendices} 
-Several appendices provide supporting documentation, including:
-- Hardware documentation covering mechanical design, electronic components, and power systems.
-- Software documentation detailing the system architecture, control software, and WiFi/web interface implementation.
-- Experimental data, including testing protocols, environmental testing results, power consumption analysis, and control response evaluations.
-
+%//////////////////
+%//////////////////
+%chapter 2
+%//////////////////
+%//////////////////
 \chapter{State of the Art}
+
+This chapter reviews the biological principles of snake locomotion, including natural movement patterns and biomechanics. It also explores the historical development and current state of snake robot research, covering simulation and modeling approaches, biologically inspired robotic designs, and neurological models for locomotion control.
 
 \section{Biological Snake Locomotion}
 Snake locomotion has been extensively studied as a foundation for bio-inspired robotics. According to \textcite{liljeback-2013}, snake motion can be characterized by several distinct patterns, each optimized for different environmental conditions and objectives. These patterns have been widely implemented in robotic systems to improve their adaptability and efficiency in traversing complex environments.
-
-\textcite{liljeback-2013} present a fundamental analysis of lateral undulation, emphasizing its role in snake robots' ability to navigate diverse terrains efficiently. Further investigations have examined the biomechanical principles underlying these motion patterns, contributing to the development of advanced control strategies \textcite{lamping-2022}.
+Further investigations have examined the biomechanical principles underlying these motion patterns, contributing to the development of advanced control strategies \cite{lamping-2022}.
 
 \subsection{Natural Snake Movement Patterns}
 The primary motion patterns observed in biological snakes include:
@@ -126,35 +172,38 @@ The primary motion patterns observed in biological snakes include:
 Lateral undulation, also known as serpentine motion, is the most common form of snake locomotion \textcite{liljeback-2013}. In this pattern, the snake creates a series of smooth curves that propagate from head to tail, generating forward thrust through the interaction with ground irregularities. \textcite{liljeback-2013} describe this as a wave-like motion where the snake's body follows the path traced by its head, with each segment of the body following the same spatial curve but with a time delay. 
 
 \subsubsection{Rectilinear Motion}
-Based on \textcite{Zhenli2006} rectilinear locomotion occurs when "the skin of the ventral surface is moved forward and backward by strong muscles and the broad belly scales grip the ground, moving the snake forward in a straight line." The authors note that this form of locomotion "is used only by the heavier-bodied snakes."
+According to \textcite{Zhenli2006} rectilinear locomotion occurs when "the skin of the ventral surface is moved forward and backward by strong muscles and the broad belly scales grip the ground, moving the snake forward in a straight line." The authors note that this form of locomotion "is used only by the heavier-bodied snakes."
+
+\subsubsection{Concertina Locomotion} Concertina locomotion is named after a small accordion instrument, illustrating how the snake periodically folds and stretches its body to move forward. In this gait, the snake will anchor part of its body against the ground (or against a tunnel wall, tree branch, etc.), while other sections extend forward, after which the newly extended portion forms a new anchor and pulls the rest of the body along \cite{Zhenli2006}. note that this pattern is especially prevalent in constrained or narrow spaces, and it is often used for crossing smooth surfaces or climbing where other gaits may prove less effective.
 
 \subsubsection{Sidewinding}
-Sidewinding is "probably the most astonishing gait to observe and is mostly used by snakes in the desert" \textcite{transeth-2009}. During this locomotion, "the snake lifts and curves its body leaving short, parallel marks on the ground while moving at an inclined angle" \textcite{transeth-2009}. Unlike other gaits like lateral undulation, sidewinding involves "brief static contact between the body of the snake and the ground" \textcite{transeth-2009}. This movement pattern is particularly useful "on surfaces with low shear such as sand" where snakes can achieve velocities up to 3 km/h \textcite{transeth-2009}.
+Sidewinding is "probably the most astonishing gait to observe and is mostly used by snakes in the desert" \cite{transeth-2009}. During this locomotion, "the snake lifts and curves its body leaving short, parallel marks on the ground while moving at an inclined angle" \cite{transeth-2009}. Unlike other gaits like lateral undulation, sidewinding involves "brief static contact between the body of the snake and the ground" \cite{transeth-2009}. This movement pattern is particularly useful "on surfaces with low shear such as sand" where snakes can achieve velocities up to 3 km/h \cite{transeth-2009}.
 
 \subsection{Biomechanical Principles}
 The effectiveness of snake locomotion relies on several key physical principles:
 
 \subsubsection{Friction Models}
-As \textcite{lamping-2022} thoroughly analyze, anisotropic friction is crucial for effective snake movement. The contrast in forward versus reverse friction coefficients drives directional locomotion. This principle is significant for designing snake robots, which often require artificial scales or surface modifications to mimic this property. These mechanisms that enhance friction in snake-like robots are vital to improving their efficiency and ability to adapt to a wide range of surfaces.
-
+  As \textcite{lamping-2022} thoroughly analyze, anisotropic friction is crucial for effective snake movement. The contrast in forward versus reverse friction coefficients drives directional locomotion. This principle is significant for designing snake robots, which often require artificial scales or surface modifications to mimic this property. These mechanisms that enhance friction in snake-like robots are vital to improving their ability to adapt to a wide range of surfaces.
+ 
 \subsubsection{Propulsion Mechanics}
-The generation of propulsive forces in snake locomotion is achieved through strategic interactions with environmental push-points, where reaction forces contribute to forward movement.\textcite{Bayraktaroglu2006} describe how a snake-like robot mimics natural lateral undulation by utilizing push-points in the environment. Each module follows its predecessor, ensuring coordinated motion, while the orientation of reaction forces determines the overall direction of movement. The applied motor control inputs facilitate continuous progression similar to biological snakes.
-Additionally, rhythmic motion in biological and robotic systems is governed by central pattern generators (CPGs).\textcite{MARDER2001R986} explain that CPGs are neuronal circuits capable of producing rhythmic motor patterns such as walking, swimming, and flying without the need for sensory feedback. These circuits, found in both invertebrates and vertebrates, play a crucial role in coordinating motion patterns, with neuromodulatory pathways influencing their function. CPGs provide a robust framework for studying motor control mechanisms and their applications in robotic locomotion.
+The generation of propulsive forces in snake locomotion is achieved through strategic interactions with environmental push-points, where reaction forces contribute to forward movement. \textcite{Bayraktaroglu2006} describe how a snake-like robot mimics natural lateral undulation by utilizing push-points in the environment. Each module follows its predecessor, ensuring coordinated motion, while the orientation of reaction forces determines the overall direction of movement. The applied motor control inputs facilitate continuous progression similar to biological snakes.
+Additionally, rhythmic motion patterns are regulated by neuronal circuits known as Central Pattern Generators (CPGs), described further in Section \ref{sec:neurological_models}.
 
 \section{Snake Robots: State of the Art}
 
+This section examines the evolution of snake robotics from its inception to current state-of-the-art implementations, highlighting key developments in mechanical design, control strategies, and application domains.
+
 \subsection{Historical Development}
-The generation of propulsive forces in snake locomotion is achieved through strategic interactions with environmental push-points, where reaction forces contribute to forward movement. Bayraktaroglu et al. (2006) describe how a snake-like robot mimics natural lateral undulation by utilizing push-points in the environment. Each module follows its predecessor, ensuring coordinated motion, while the orientation of reaction forces determines the overall direction of movement. The applied motor control inputs facilitate continuous progression similar to biological snakes \textcite{Bayraktaroglu2006}.
+The historical evolution of snake robotics commenced with Hirose's pioneering work in 1972, developing the Active Cord Mechanism (ACM III), which became the foundational design for snake robots. Hirose introduced the concept of modularity and redundancy, emphasizing adaptability to challenging terrains through serpentine motion patterns \cite{transeth-2009}. His initial robot designs featured serially connected joints capable of undulatory locomotion, thus setting a standard for robust, modular robotic systems \cite{Hirose2004}.
 
-Additionally, rhythmic motion in biological and robotic systems is governed by central pattern generators (CPGs). Marder and Bucher (2001) explain that CPGs are neuronal circuits capable of producing rhythmic motor patterns such as walking, swimming, and flying without the need for sensory feedback. These circuits, found in both invertebrates and vertebrates, play a crucial role in coordinating motion patterns, with neuromodulatory pathways influencing their function. CPGs provide a robust framework for studying motor control mechanisms and their applications in robotic locomotion \textcite{MARDER2001R986}.
-
+Building upon Hirose's foundational contributions, research diversified into wheeled and wheel-less robotic designs. Initially, passive wheels were utilized to facilitate smooth movements on structured surfaces; however, these were limited to artificially prepared environments \cite{Bayraktaroglu2006}. Subsequently, a shift toward wheel-less snake robots was driven by a desire to replicate natural snake locomotion more accurately, leading to advancements in mechanical and control innovations \cite{transeth-2009}.
 
 \subsection{Current Research Directions}
 Contemporary research in snake robotics is focused on enhancing locomotion efficiency, adaptability, and control mechanisms. Several key areas of investigation include:
 
 \subsubsection{Control Systems}
-Central Pattern Generators (CPGs) have emerged as a powerful tool for generating rhythmic movements in snake robots.
-\textcite{Seeja2022} discuss the application of Central Pattern Generator (CPG) algorithms in snake-like robot locomotion, particularly to avoid obstacles. The study highlights that CPG models enable the robot to adjust its trajectory dynamically, allowing it to turn and evade obstacles. In addition, the incorporation of sensory feedback enhances collision detection. The research also introduces a phase transition method that utilizes phase-difference control parameters to facilitate smooth turning motions. This neural oscillator-based CPG approach is employed to generate rhythmic locomotion patterns, including rectilinear and lateral undulation gaits.
+
+Central Pattern Generators (CPGs) have been increasingly applied to snake-like robots for generating rhythmic movements. \textcite{Seeja2022} discuss CPG-based algorithms enabling robots to dynamically adjust trajectories, facilitating obstacle avoidance and smooth turning motions. Sensory feedback integration further improves collision detection and adaptive movement capabilities.
 
 \subsubsection{Alternative Locomotion Strategies}
 \textcite{yamano-2023} propose a rolling motion strategy for snake-like robots that enhances efficiency by utilizing a shift in the center of gravity (COG). Their approach divides the rolling motion into four distinct phases: (1) the kick stage, where the robot’s head or tail moves to initiate ground contact and generate rolling motion; (2) COG shift stage I, in which a heavier link at the head or tail moves forward to reposition the COG; (3) COG shift stage II, where the same link is raised to further adjust the COG; and (4) the rolling stage, where gravity facilitates continuous rolling motion.
@@ -173,52 +222,49 @@ Bio-inspired design principles continue to drive innovations in snake robotics. 
 Building on this, \textcite{Arachchige2021} explored the potential of soft robotic snakes (SRS) by incorporating spatial bending capabilities to extend locomotion beyond conventional planar gaits. Their study demonstrates how continuous and smooth bending enables snake robots to better replicate biological movement, allowing for improved adaptability in climbing, swimming, and traversing complex terrains. These advancements highlight how soft robotics principles enhance maneuverability while maintaining structural integrity and operational efficiency.
 
 \section{Neurological Models of Snake Locomotion}
-
-The locomotion of snakes has been extensively studied, revealing that their movement is governed by a complex neural system that enables adaptive and rhythmic motion. This capability is primarily controlled by Central Pattern Generators (CPGs), which are neural circuits responsible for generating rhythmic outputs without requiring continuous sensory feedback. These circuits, located within the spinal cord, play a fundamental role in orchestrating rhythmic behaviors such as walking, swimming, and crawling in both vertebrates and invertebrates \textcite{MARDER2001R986}
-
-\subsection{Biological Neural Control}
-
-Biological snakes exhibit highly coordinated and adaptable movements, facilitated by a hierarchical neural control system. The spinal cord and peripheral nervous system function together to generate oscillatory patterns required for movement, even in the absence of sensory input. This suggests the existence of intrinsic neural oscillators that can sustain rhythmic activity autonomously \textcite{Inoue2007}. However, while CPGs can generate fundamental locomotor rhythms, sensory feedback plays a crucial role in modulating these patterns to refine motion and adapt to environmental variations \textcite{MARDER2001R986}.
-
-Studies have shown that \textbf{proprioceptive and exteroceptive feedback} dynamically influence CPG activity, allowing for more stable and adaptive movement. This feedback mechanism enables snakes to transition between different locomotion patterns, such as \textbf{lateral undulation, concertina movement, and sidewinding}, depending on the terrain and external perturbations \textcite{Inoue2007}. Additionally, research on \textbf{CPG-based locomotion control in robotic snakes} has demonstrated that coupled neural oscillators can effectively reproduce these natural movements, allowing for continuous sinusoidal firing patterns in serpentine motion and controlled recovery periods for rectilinear movement  \textcite{manzoor-2019}.
-
+\label{sec:neurological_models}
+The locomotion of snakes has been extensively studied, revealing that their movement is governed by neural circuits that enables adaptive and rhythmic motion. This capability is controlled by Central Pattern Generators (CPGs), which are neural circuits responsible for generating rhythmic outputs without requiring continuous sensory feedback. These circuits, located within the spinal cord, play a fundamental role in orchestrating rhythmic behaviors such as walking, swimming, and crawling in both vertebrates and invertebrates \cite{MARDER2001R986}
 
 \subsection{Central Pattern Generator (CPG) Model}
-Central Pattern Generators (CPGs) are distributed neural networks that generate rhythmic motor outputs and are fundamental for biological locomotion. These networks have been extensively studied in the context of snake-like robot control, where they mimic the segmented structure of a real snake. Typically, CPG models consist of coupled oscillators arranged in a chain-like formation, producing phase-shifted rhythmic signals that facilitate coordinated joint actuation \textcite{wang2020cpg}.
 
-Research has demonstrated that a simulated snake-like robot controlled by a CPG network can dynamically adapt to varying ground friction conditions through proprioceptive sensory feedback. In one study, friction sensors installed at the joints provided real-time input to sensory interneurons (SINs), allowing the system to adjust locomotion patterns accordingly. By processing frictional data through a combination of first-order lag and dead-time components, the robot was able to alter its movement in response to surface changes, improving stability and energy efficiency\textcite{Inoue2007}. 
+CPGs, fundamental to locomotion control, are extensively modeled to replicate the rhythmic patterns of snake locomotion. They typically comprise coupled neural oscillators that produce rhythmic signals with stable oscillations and phase-shifted outputs for coordinated joint movements \cite{wang2020cpg}. Various approaches to CPG modeling have been proposed:
 
-Furthermore, a bidirectional cyclic inhibitory CPG model has been proposed to enhance locomotion adaptability. This model allows a snake-like robot to transition smoothly between different locomotion gaits—such as serpentine, concertina, and sidewinding—by incorporating feedback mechanisms from both higher-level neural control and environmental interactions\textcite{Zhenli2006}. 
-
-Another approach involves a cyclic inhibitory CPG network designed specifically for 3D locomotion. Simulations conducted using a dynamic model in ADAMS software demonstrated that the robot could effectively navigate varying terrain by adjusting its joint oscillations and frictional response. The study highlighted the role of Coulomb friction in defining environmental interactions, which in turn influenced the adaptation strategy of the CPG-based control system\textcite{Lu2006}. 
-
-These findings reinforce the effectiveness of CPG networks in controlling rhythmic, adaptive locomotion in snake-like robots. By integrating real-time sensory feedback and bidirectional neural inhibition, these models enable autonomous adaptation to environmental changes, thereby improving both stability and movement efficiency.
-
-\subsection{CPG Modeling Approaches}
-
-Several approaches have been proposed for modeling CPG-based control of snake-like robots. These can be broadly classified into the following categories:
-
+\FloatBarrier
 \subsubsection{Mutual Inhibitory CPGs}
 
-One of the fundamental architectures for generating rhythmic motion is the mutual inhibitory CPG model, which consists of neuron pairs that reciprocally inhibit each other, leading to stable oscillations. This architecture ensures continuous rhythmic movement. However, it lacks adaptability to environmental variations because it does not inherently produce sustained oscillations without additional adaptation mechanisms \textcite{Lu2006}.
+One of the fundamental architectures for generating rhythmic motion is the mutual inhibitory CPG model shown in Figure~\ref{fig:mutual_inhibitory_cpg}, which consists of neuron pairs that reciprocally inhibit each other, leading to stable oscillations. This architecture ensures continuous rhythmic movement. However, it lacks adaptability to environmental variations because it does not inherently produce sustained oscillations without additional adaptation mechanisms \cite{Lu2006}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{media/MI_CPG.png}
+\caption{Mutual inhibitory CPG model \cite{Lu2006}. This model illustrates pairs of neurons reciprocally inhibiting each other, creating stable rhythmic oscillations.}
+\label{fig:mutual_inhibitory_cpg}
+\end{figure}
 
 \subsubsection{Cyclic Inhibitory CPGs}
 
-Cyclic inhibitory CPG models address the limitations of mutual inhibitory architectures by incorporating feedback loops that enable the system to maintain oscillatory activity over time. These models involve interconnected neurons in a cyclic inhibitory structure, allowing for sustained and coordinated oscillations. This design proves particularly effective in generating stable 3D locomotion, as it enhances phase synchronization across multiple joints. Studies have demonstrated the effectiveness of this model in achieving robust serpentine motion, making it a preferable choice for controlling the locomotion of snake-like robots \textcite{Lu2006}.
+Cyclic inhibitory CPG models address the limitations of mutual inhibitory architectures by incorporating feedback loops that enable the system to maintain oscillatory activity over time. These models involve interconnected neurons in a cyclic inhibitory structure (see Figure \ref{fig:cyclic_inhibitory_cpg}), allowing for sustained and coordinated oscillations. This design proves particularly effective in generating stable 3D locomotion, as it enhances phase synchronization across multiple joints. Studies have demonstrated the effectiveness of this model in achieving robust serpentine motion, making it a preferable choice for controlling the locomotion of snake-like robots \cite{Lu2006}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{media/CI_CPG.png}
+\caption{Cyclic inhibitory CPG model \cite{Lu2006}}
+\label{fig:cyclic_inhibitory_cpg}
+\end{figure}
 
 \subsubsection{Sensory Feedback-Integrated CPGs}
-Recent advancements in CPG modeling incorporate sensory feedback mechanisms, allowing adaptive locomotion. These models integrate sensory information through sensory interneurons (SIN), which relay environmental data back to the CPG, enabling real-time adjustments to oscillatory parameters \textcite{Inoue2007}. For instance, \textcite{Inoue2007} implemented a CPG-based control system where sensory input was processed by SIN and fed back into the CPG, enhancing the robot's ability to adapt to variations in ground friction.
+Recent advancements in CPG modeling incorporate sensory feedback mechanisms, allowing adaptive locomotion. These models integrate sensory information through sensory interneurons (SIN), which relay environmental data back to the CPG, enabling real-time adjustments to oscillatory parameters \cite{Inoue2007}. For instance, \textcite{Inoue2007} implemented a CPG-based control system where sensory input was processed by SIN and fed back into the CPG, enhancing the robot's ability to adapt to variations in ground friction.
 
 \subsubsection{Evolutionary and Learning-Based CPGs}
-Machine learning and evolutionary algorithms have been applied to optimize CPG parameters for snake locomotion. By employing genetic algorithms (GA), researchers have enabled robots to autonomously refine their locomotion patterns in response to different terrains and obstacles \textcite{Inoue2007}. Specifically, \textcite{Inoue2007} used GA to evolve CPG parameters that maximize adaptability across varying friction conditions, demonstrating that multi-environment performance-based evaluation functions enhance adaptive locomotion.
+Machine learning and evolutionary algorithms have been applied to optimize CPG parameters for snake locomotion. By employing genetic algorithms (GA), researchers have enabled robots to autonomously refine their locomotion patterns in response to different terrains and obstacles \cite{Inoue2007}. Specifically, \textcite{Inoue2007} used GA to evolve CPG parameters that maximize adaptability across varying friction conditions, demonstrating that multi-environment performance-based evaluation functions enhance adaptive locomotion.
 
 \subsection{Implementation Considerations}
 When implementing CPG-based control, several key factors must be considered:
 \begin{itemize}
-    \item Phase Relationships Between Segments: To achieve effective serpentine locomotion, it is essential to maintain a consistent phase difference between joint oscillations. This phase control ensures synchronized movement, allowing the robot to generate propulsion force through interactions with the ground\textcite{Norzalilah2014}.
-    \item Coupling Strengths Between Oscillators: The coordination between different segments of a CPG network is influenced by the strength of the connections between oscillators. Proper tuning of descending and ascending coupling pathways is necessary to ensure segmental synchronization, which requires detailed anatomical and electrophysiological studies\textcite{MARDER2001R986}.
-    \item Adaptation Mechanisms for Environmental Feedback: A robust CPG-based system must integrate sensory feedback to adapt to environmental variations. Sensory inputs, such as ground reaction forces or muscle length changes, can be fed back into the CPG network to enhance stability and improve locomotion resilience against disturbances\textcite{Inoue2007}.
-    \item Stability of Rhythm Generation: The stability of rhythmic motion depends on ensuring bounded and well-defined oscillatory behavior. Mathematical conditions such as Lipschitz continuity help establish the existence and uniqueness of stable rhythmic solutions in CPG models, preventing disruptions in locomotion patterns\textcite{Zhenli2006}.
+    \item Phase Relationships Between Segments: To achieve effective serpentine locomotion, it is essential to maintain a consistent phase difference between joint oscillations. This phase control ensures synchronized movement, allowing the robot to generate propulsion force through interactions with the ground \cite{Norzalilah2014}.
+    \item Coupling Strengths Between Oscillators: The coordination between different segments of a CPG network is influenced by the strength of the connections between oscillators. Proper tuning of descending and ascending coupling pathways is necessary to ensure segmental synchronization, which requires detailed anatomical and electrophysiological studies \cite{MARDER2001R986}.
+    \item Adaptation Mechanisms for Environmental Feedback: A robust CPG-based system must integrate sensory feedback to adapt to environmental variations. Sensory inputs, such as ground reaction forces or muscle length changes, can be fed back into the CPG network to enhance stability and improve locomotion resilience against disturbances \cite{Inoue2007}.
+    \item Stability of Rhythm Generation: The stability of rhythmic motion depends on ensuring bounded and well-defined oscillatory behavior. Mathematical conditions such as Lipschitz continuity help establish the existence and uniqueness of stable rhythmic solutions in CPG models, preventing disruptions in locomotion patterns \cite{Zhenli2006}.
 \end{itemize}
 
 These models provide a foundation for developing bio-inspired control systems that can generate smooth, coordinated motion patterns while maintaining adaptability to environmental changes.
@@ -242,207 +288,59 @@ where \( \theta_k \) represents the phase of the \( k \)-th oscillator, \( v \) 
     \phi_k = A \cos(\theta_k), \quad 1 \leq k \leq N
 \end{equation}
 
-where \( A \) represents the oscillation amplitude. This mathematical formulation provides a precise method for generating rhythmic movement, crucial for implementing bio-inspired locomotion strategies in snake-like robots \textcite{wang2020cpg}.
+where \( A \) represents the oscillation amplitude. This mathematical formulation provides a precise method for generating rhythmic movement, crucial for implementing bio-inspired locomotion strategies in snake-like robots \cite{wang2020cpg}.
 
-
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
+%//////////////////
+%//////////////////
+%chapter 3
+%//////////////////
+%//////////////////
 
 \chapter{System Design, Implementation, and Details}
 
-This chapter presents the complete design and implementation of the bio-inspired snake robot system. The design draws inspiration from biological snake locomotion patterns \cite{transeth-2009} and implements Central Pattern Generator (CPG) based control strategies similar to those discussed by \cite{Inoue2007}. The system architecture encompasses hardware design, control implementation, and motion pattern generation, with a focus on achieving versatile locomotion modes through a modular approach.
+This chapter presents the complete design and implementation of the bio-inspired snake robot, focusing on its hardware architecture, control system, and motion generation. Inspired by biological snake locomotion patterns, the system employs Central Pattern Generator (CPG)-based control strategies.
+
 
 \section{Evolution of System Design}
-The development of the snake robot proceeded through multiple iterations, each addressing specific challenges and limitations identified during testing and implementation.
+The snake robot underwent several iterations, each driven by practical testing and the desire to overcome early design limitations. The first prototype was built around an STM32-L432KC microcontroller with only preprogrammed parameters, offering no interface to start, stop, or adjust the locomotion algorithm in real time. All circuitry, including the buck converters, was centralized in the head module, making it disproportionately large and heavy compared to the rest of the body. This imbalance placed excessive strain on the front servo motor, reducing maneuverability and overall efficiency.
 
-\subsection{Initial Prototype}
-The first iteration of the snake robot utilized an STM32-L432KC microcontroller with the following configuration:
-\begin{itemize}
-    \item Control Unit: STM32-L432KC microcontroller
-    \item Power Supply: 3.7V Li-ion battery (18650)
-    \item Voltage Regulation: 3V to 5V buck converters
-    \item Signal Processing: 8 and 4 channel level shifters
-    \item Actuation: 10 Miuzei 9G micro servos
-\end{itemize}
+Motivated by these limitations, a new approach centered on the ESP32 microcontroller was adopted. The ESP32 not only offers more capable processing but also provides built-in wireless connectivity, allowing for a WiFi-based interface to control motion parameters remotely. Beyond WiFi, the ESP32 facilitates future expansion via ESP-NOW for direct controller-to-controller links, making it possible to develop a dedicated handheld remote or integrate additional sensing modules without physical wiring. Familiarity with the ESP32 development environment and libraries further justified its selection over the STM32 platform.
 
-Initial testing revealed several limitations:
-\begin{itemize}
-    \item Limited motion control capabilities due to microcontroller constraints
-    \item Mechanical instability in the single-point contact hinge design
-    \item Restricted movement to horizontal plane only
-    \item Complex wiring due to centralized power distribution
-\end{itemize}
+In parallel with changing the microcontroller, the mechanical design was refined to address structural weaknesses. Rather than relying on a single contact point in each joint, two robust contact points were introduced, significantly improving stability and mitigating stresses that lead to early mechanical failures. A vertical joint was also added to enable out-of-plane motion, expanding the robot’s maneuverability beyond simple horizontal undulations and paving the way for more complex locomotion strategies.
 
-\subsection{Final System Architecture}
-The improved design iteration addressed previous limitations through several key modifications:
-\begin{itemize}
-    \item Migration to ESP32 microcontroller for enhanced connectivity and processing capabilities
-    \item Redesigned power distribution system with distributed buck converters
-    \item Implementation of signal integrity improvements through capacitive filtering ($100\mu F$, 16V) and pull-down resistors ($10k\Omega$)
-    \item Addition of current sensing capabilities using ACS712 sensor
-    \item Integration of TPU-printed passive scales for improved ground interaction
-\end{itemize}
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
+\subsection{Distributed Power and Noise Mitigation}
+Shifting the power architecture to a distributed design represented another key enhancement. Instead of locating all buck converters in the head, individual converters were placed near each servo motor. This arrangement reduced the length and complexity of wiring, requiring only a single power line routed from the battery to each converter. Although this layout made the design cleaner and lighter, it also introduced an issue with signal noise: the servos occasionally moved erratically or exhibited jitter.
+
+A detailed investigation revealed that the combination of servo control signals and distributed power lines led to unwanted interference. To counteract this noise, a 16\,V/100\,$\mu$F capacitor was placed on each buck converter output, acting as a local power reservoir. Additionally, each servo signal line was equipped with a 10\,k$\Omega$ pull-down resistor, which helped stabilize the control signals. These hardware modifications effectively eliminated the jitter and restored precise servo actuation.
+
+\subsection{Battery Selection and Current Sensing}
+After refining the cabling and completing initial motion tests, it became evident that the chosen battery’s built-in current-limiting protection would occasionally trigger and power down the system. During peak load conditions, especially when multiple servos actuated simultaneously, the protection circuit perceived an overcurrent event and disconnected the output. 
+
+To address this, a standard 18650 Li-ion cell without built-in current-limiting circuitry was chosen as the primary power source. Realizing that accurate power monitoring would be critical, an ACS712-based current sensor was integrated into the design. By measuring the instantaneous current draw, the control software can monitor power consumption in real time, log average and peak current usage, and provide valuable diagnostics to the user. 
+
 \section{Hardware Implementation}
-\subsection{Mechanical Design}
-The mechanical structure implements a modular approach similar to that described by \cite{wang-2016}, with several key improvements for enhanced stability and motion capability.
-\subsubsection{Segment Design}
-Each segment of the snake robot consists of:
-\begin{itemize}
-    \item Servo motor holder with dual contact points for improved stability
-    \item Integrated electronics bay for local power regulation
-    \item TPU-printed passive scales for ground interaction
-    \item Dual-axis joint mechanism enabling both horizontal and vertical motion
+Following the above design decisions, the mechanical and electronic structures were consolidated into a modular system. The head module now houses the ESP32, the main battery, the current sensor, and the primary wiring harnesses routed through a dedicated cable management channel. Buck converters are distributed such that each servo has a nearby power regulator, ensuring stable voltage supply and reducing the chance of voltage drops or noise accumulation.
 
-\end{itemize}
-\subsubsection{Modular Component Design}
-The snake robot's mechanical structure consists of four distinct types of 3D-printed modules, each designed to serve specific functions while maintaining overall system integration \cite{Mohammed2016}. 
-
-\paragraph{Head Module}
-The head module serves as the control center and power hub of the robot:
-\begin{itemize}
-    \item Houses the ESP32 microcontroller and primary power components
-    \item Features an integrated 18650 battery compartment
-    \item Contains the ACS712 current sensor mounting area
-    % \item Includes ventilation slots for thermal management
-    \item Incorporates cable routing channels for organized wire management
-\end{itemize}
-
-\paragraph{Horizontal Axis Modules}
-These modules form the primary locomotion segments:
-\begin{itemize}
-    \item Dual-point servo mounting system for enhanced stability
-    \item Integrated electronics bay for buck converter placement
-    \item Reinforced connection points to handle lateral forces
-    \item Cable management channels for power and signal wires
-\end{itemize}
-
-\paragraph{Vertical Axis Modules}
-Specialized segments enabling three-dimensional motion:
-\begin{itemize}
-    \item Modified servo mounting orientation for vertical actuation
-    \item Enhanced structural support for lifting forces
-    \item Compatible connection points with horizontal modules
-    % \item Integrated passive scale mounting points
-\end{itemize}
-
-\paragraph{Tail Module}
-The terminal segment designed for:
-\begin{itemize}
-    % \item Weight distribution optimization
-    % \item Cable strain relief
-    % \item Protective electronics enclosure
-    % \item Aerodynamic profile for reduced motion resistance
-\end{itemize}
-
-The servo layout follows a specific pattern to enable both lateral undulation and sidewinding motions:
-\begin{lstlisting}[language=C++]
-const int servoLayout[NUM_SERVOS] = {1,0,1,1,0,1,1,0,1,1};
-// 1=horizontal, 0=vertical
-\end{lstlisting}
-
-This arrangement, inspired by the work of \cite{Seeja2022}, provides:
-\begin{itemize}
-    \item 7 horizontal servos for lateral movement and wave propagation
-    \item 3 vertical servos for lifting and sidewinding capabilities
-\end{itemize}
-
-\subsection{Electronic System}
-\subsubsection{Power Distribution}
-The power system implements a distributed architecture:
-\begin{itemize}
-    \item Main power: Single 18650 Li-ion battery (3.7V)
-    \item Local regulation: Individual buck converters for each servo
-    \item Noise suppression: 100μF capacitors parallel to each buck converter
-    \item Current monitoring: ACS712 sensor for power consumption analysis
-\end{itemize}
-
-\subsubsection{Signal Integrity}
-Signal integrity improvements include:
-\begin{itemize}
-    \item 10kΩ pull-down resistors on all servo control lines
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    \item Distributed ground plane design
-    \item Short signal paths through modular design
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-    %/////////////////////////////////////////////////////////
-\end{itemize}
+Mechanically, each segment features two robust hinge contact points to support lateral and vertical movements. A vertical joint segment is inserted at intervals to allow out-of-plane motion, enhancing maneuverability beyond simple sinusoidal undulation. The tail segment carries no electronics and adds more of a Visual effect than a practical one.
 
 \section{Control System Architecture}
-\subsection{Core Control System}
-The control system implements a bio-inspired approach based on Central Pattern Generators (CPGs) \cite{MARDER2001R986}, utilizing the ESP32's capabilities for both pattern generation and wireless control.The system architecture consists of:
-\begin{itemize}
-    \item Motion pattern generator for servo control
-    \item Web server for remote parameter adjustment
-    \item Real-time parameter update system
-    \item Current monitoring and data logging
-\end{itemize}
+Leveraging the ESP32’s computing and connectivity, the control system adopts a bio-inspired Central Pattern Generator (CPG) approach to coordinate the robot’s undulations. The CPG model allows for parameterized control over amplitude, phase offset, and frequency, all of which can be modified in real time via a web-based interface hosted directly on the ESP32.
 
+During operation, the ESP32 creates an access point through which a user can connect via a standard web browser. Motion parameters, start/stop commands, and other real-time adjustments are transmitted via HTTP POST requests, immediately influencing the CPG outputs and servo drive signals. This wireless interface greatly simplifies experimentation with different locomotion patterns, as it eliminates the need for physical programming cables and manual adjustments.
 
-\subsubsection{Motion Control Parameters}
-The system uses the following key parameters for motion control:
+Future expansions include employing ESP-NOW to link the snake robot’s ESP32 with a remote-control unit, also based on an ESP32, enabling direct, low-latency communication. This setup could further extend to multiple sensory modules or even swarm collaboration between multiple robots. In summary, the move to an ESP32 platform, combined with distributed power regulation, vertical joint integration, and robust noise suppression, has significantly enhanced both the mechanical and electronic performance of the snake robot while laying a flexible foundation for continued innovation.
 
-\begin{lstlisting}[language=C++]
-// Motion Parameters
-float amplitude = 30.0;      // Wave amplitude (degrees)
-float frequency = 1.0;       // Oscillation frequency (Hz)
-float phaseOffset = 60.0;    // Phase offset between segments
-float centerPosition = 90.0; // Neutral position (degrees)
-\end{lstlisting}
-Parameter constraints are implemented to ensure mechanical safety:
-\begin{itemize}
-    \item Amplitude: Limited to 10-45 degrees
-    \item Frequency: Range of 0.1-2.0 Hz
-    \item Phase offset: Constrained between 30-90 degrees
-\end{itemize}
-
-These parameters are dynamically adjustable through the web interface, allowing real-time motion pattern modification.
-
-\subsection{Wireless Interface Implementation}
-The ESP32 creates a wireless access point and web server for remote control:
-
-\begin{lstlisting}[language=C++]
-WiFi.softAP("ESP32_Snake", "12345678");
-server.on("/", HTTP_GET, handleRoot);
-server.on("/", HTTP_POST, handleSetParameters);
-server.on("/current", HTTP_GET, handleCurrentData);  
-server.on("/download", HTTP_GET, handleDownload);
-\end{lstlisting}
-
-The web interface provides:
-\begin{itemize}
-    \item Real-time parameter adjustment
-    \item Movement mode selection
-    \item System monitoring capabilities
-    \item Diagnostic functions
-\end{itemize}
-
-Parameter updates are handled through HTTP POST requests:
-
-\begin{lstlisting}[language=C++]
-void handleSetParameters() {
-    if (server.hasArg("amplitude")) {
-        amplitude = constrain(server.arg("amplitude").toFloat(), 
-                            10.0, 45.0);
-    }
-    // Similar handlers for frequency and phase
-}
-\end{lstlisting}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{media/WebUi.png}
+\caption{Web Ui to control the snake's behavier}
+\end{figure}
 
 \section{Motion Pattern Generation}
+Locomotion is generated using biologically inspired Central Pattern Generator (CPG) algorithms, primarily implementing lateral undulation and sidewinding patterns. The control system is designed to mimic the neurobiological motion generation found in biological snakes, where rhythmic patterns emerge from neural networks without requiring continuous sensory feedback \parencite{MARDER2001R986}. 
+
 \subsection{Lateral Undulation}
-The lateral undulation pattern, based on the work of \cite{liljeback-2013}, is implemented as a traveling wave:
+Lateral undulation is the most common locomotion pattern observed in biological snakes and is particularly effective on flat surfaces with friction \parencite{transeth-2009}. In our implementation, this pattern follows a traveling wave function, where each servo's angular displacement is determined by a sinusoidal function:
 
 \begin{equation}
 \theta_i(t) = A \sin(\omega t + \phi_i) + \theta_{\text{offset}}
@@ -450,118 +348,634 @@ The lateral undulation pattern, based on the work of \cite{liljeback-2013}, is i
 
 Where:
 \begin{itemize}
-    \item $\theta_i(t)$ is the angle of the i-th servo at time t
-    \item $A$ is the amplitude
-    \item $\omega = 2\pi f$ is the angular frequency
-    \item $\phi_i$ is the phase offset for segment i
-    \item $\theta_{\text{offset}}$ is the center position
+    \item $\theta_i(t)$ is the angle of the $i$-th servo at time $t$,
+    \item $A$ is the amplitude of the wave (controlled via the interface as \texttt{amplitude}),
+    \item $\omega = 2\pi f$ is the angular frequency based on frequency $f$ (controlled as \texttt{frequency}),
+    \item $\phi_i$ is the phase offset for the $i$-th segment, calculated as $i \cdot \text{phaseOffset}$,
+    \item $\theta_{\text{offset}}$ is the center position (set to 90° in our implementation).
 \end{itemize}
 
-The implementation includes direction control:
+Looking at the implementation, the lateral undulation is generated in the \break \texttt{updateServosLateralUndulation()} function. The time-dependent parameter is calculated as:
 
-\begin{lstlisting}[language=C++]
-void updateServosLateralUndulation() {
-    float timeScale = millis() * 0.001 * frequency * 2 * PI;
-    int horizontalIndex = 0;
-    
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        if (servoLayout[i] == 1) {
-            float phase = forwardDirection ? 
-                radians(horizontalIndex * phaseOffset) : 
-                radians((NUM_HORIZONTAL - 1 - horizontalIndex) * phaseOffset);
-            float angle = centerPosition + amplitude * sin(timeScale + phase);
-            servos[i].write(angle);
-            horizontalIndex++;
-        }
-    }
-}
-\end{lstlisting}
+\begin{equation}
+\text{timeScale} = t \cdot 0.001 \cdot f \cdot 2\pi
+\end{equation}
 
-\subsection{Sidewinding Implementation}
-The sidewinding motion, inspired by \cite{yamano-2023}, combines horizontal and vertical waves with a phase offset:
+Where $t$ is the system time in milliseconds from the \texttt{millis()} function, scaled to seconds with the 0.001 factor. This provides the temporal component of the wave.
 
-\begin{lstlisting}[language=C++]
-void updateServosSidewinding() {
-    float timeScale = millis() * 0.001 * frequency * 2 * PI;
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        if (servoLayout[i] == 1) {
-            // Horizontal motion
-            float angle = centerPosition + amplitude * 
-                         sin(timeScale + horizontalPhase);
-            servos[i].write(angle);
-        } else {
-            // Vertical motion with 90-degree phase offset
-            float angle = centerPosition + verticalAmplitude * 
-                         sin(timeScale + verticalPhase + PI/2);
-            servos[i].write(angle);
-        }
-    }
-}
-\end{lstlisting}
+For each horizontal servo in the array, a phase offset is applied depending on the segment's position and the desired direction of travel:
 
-\section{System Performance and Limitations}
-\subsection{Performance Analysis}
-Current system capabilities include:
+\begin{equation}
+\text{segmentPhase} = 
+\begin{cases}
+(N_h - 1 - i) \cdot \phi & \text{for forward motion} \\
+i \cdot \phi & \text{for backward motion}
+\end{cases}
+\end{equation}
+
+Where $N_h$ is the number of horizontal servos (7 in our implementation), $i$ is the index of the horizontal servo, and $\phi$ is the phase offset in radians. The inversion of phase progression for different directions creates a traveling wave that moves either anteriorly or posteriorly along the robot's body, similar to how biological snakes propagate waves from head to tail during forward motion \parencite{liljeback-2013}.
+
+The final angular position of each servo is calculated as:
+
+\begin{equation}
+\theta_i = \theta_{\text{center}} + A \cdot \sin(\text{timeScale} + \text{segmentPhase})
+\end{equation}
+
+An important consideration in our implementation is that the phase relationship definition for forward and backward motion is carefully constructed to ensure the wave propagates in the correct direction. For forward motion, the wave must travel from the tail toward the head (posteroanterior propagation), creating a pushing force against the ground that propels the robot forward. Our implementation achieves this by inverting the phase index calculation for forward motion, ensuring the wave propagates in the correct biological direction.
+
+
+\begin{figure}
+  \centering
+  \animategraphics[controls,width=0.8\textwidth]{12}{media/Lateral/ezgif-frame-}{1}{33}
+  \caption{Lateral Undulation simulation showing the propagation of the sinusoidal wave through the robot's body. Note how the wave travels from tail to head during forward motion.}
+  \label{fig:lateral-anim}
+\end{figure}
+
+\FloatBarrier
+\subsection{Sidewinding}
+Sidewinding is a more complex locomotion pattern used by snakes in low-friction environments such as sand or smooth surfaces \cite{transeth-2009}. It combines horizontal and vertical wave motions with a specific phase relationship between them to generate a lifting effect. This implementation follows concepts from studies like \textcite{yamano-2023} and is formulated as:
+
+\begin{equation}
+\theta_{i,h}(t) = A_h \sin(\omega t + \phi_{i,h}) + \theta_{\text{center}}
+\end{equation}
+
+\begin{equation}
+\theta_{i,v}(t) = A_v \sin(\omega t + \phi_{i,v} + \Delta\phi) + \theta_{\text{center}}
+\end{equation}
+
+Where:
 \begin{itemize}
-    \item Update rate: 50Hz (20ms interval)
-    \item Wireless control range: approximately 50 meters
-    \item Motion patterns: Lateral undulation and sidewinding
-    \item Real-time parameter adjustment
+    \item $\theta_{i,h}(t)$ represents the horizontal actuation of the $i$-th servo,
+    \item $\theta_{i,v}(t)$ represents the vertical actuation,
+    \item $A_h$ and $A_v$ are the respective amplitudes of horizontal and vertical motion (set as \texttt{amplitude} and \texttt{verticalAmplitude} in our implementation),
+    \item $\phi_{i,h}$ and $\phi_{i,v}$ are the phase offsets for each segment,
+    \item $\Delta\phi$ is the phase difference between horizontal and vertical waves (set to 90° in our implementation).
 \end{itemize}
 
-\subsection{Current Limitations}
+The implementation in \texttt{updateServosSidewinding()} handles both horizontal and vertical servos differently. For horizontal servos, the phase calculation considers the direction of travel:
+
+\begin{equation}
+\phi_{i,h} = 
+\begin{cases}
+(N_h - 1 - i) \cdot \phi & \text{for forward motion} \\
+i \cdot \phi & \text{for backward motion}
+\end{cases}
+\end{equation}
+
+For vertical servos, the phase relationship includes both the progressive phase based on segment position and the additional vertical phase offset:
+
+\begin{equation}
+\phi_{i,v} = 
+\begin{cases}
+(N_v - 1 - i) \cdot \phi + \phi_{\text{vertical}} & \text{for forward motion} \\
+i \cdot \phi + \phi_{\text{vertical}} & \text{for backward motion}
+\end{cases}
+\end{equation}
+
+Where $N_v$ is the number of vertical servos (3 in our robot), $i$ is the index of the vertical servo, $\phi$ is the phase offset, and $\phi_{\text{vertical}}$ is the additional phase offset between horizontal and vertical waves (set to 90° or $\pi/2$ radians).
+
+This configuration creates a coordinated lifting and lateral movement that allows the robot to "sidestep" across surfaces. The vertical wave component causes segments to lift off the ground in sequence, while the horizontal component creates the necessary lateral displacement. The 90° phase difference between the horizontal and vertical waves is critical, as it ensures that maximum vertical displacement occurs at the appropriate point in the horizontal cycle \parencite{yamano-2023}.
+
+Our specific implementation of the vertical servo control in sidewinding uses a more complex phase calculation that accounts not only for the segment position but also adjusts for the direction of travel. For forward motion, the phase progression is inverted similarly to the horizontal servos, but with an adjustment for the different number of vertical servos:
+
+\begin{equation}
+\phi_{i,v} = (N_t - N_h - 1 - i) \cdot \phi + \phi_{\text{vertical}}
+\end{equation}
+
+Where $N_t$ is the total number of servos (10) and $N_h$ is the number of horizontal servos (7). This ensures proper coordination between horizontal and vertical movements during direction changes.
+
+
+\begin{figure}
+  \centering
+  \animategraphics[controls,width=0.8\textwidth]{12}{media/Side/ezgif-frame-}{1}{33}
+  \caption{Sidewinding movement simulation showing the combined effect of horizontal and vertical wave propagation. Note the diagonal lifting pattern that creates the characteristic sidewinding motion.}
+  \label{fig:side-anim}
+\end{figure}
+
+\subsection{Servo Layout and Configuration}
+The physical arrangement of servos in our snake robot follows a specific pattern designed to support both locomotion modes effectively. The robot consists of 10 servo modules arranged in an alternating pattern of horizontal and vertical actuators:
+
+\begin{equation}
+\text{servoLayout} = [1, 0, 1, 1, 0, 1, 1, 0, 1, 1]
+\end{equation}
+
+Where 1 represents a horizontal servo (7 total) and 0 represents a vertical servo (3 total). This asymmetric distribution was chosen based on preliminary testing that showed better performance with more horizontal actuators, while still providing sufficient vertical control for effective sidewinding.
+
+\begin{figure}
+  \centering
+  \includesvg[width=0.9\textwidth]{media/svg/Layout_Diagram.svg}
+  \caption{Physical arrangement of servos in the snake robot showing the alternating pattern of horizontal (H) and vertical (V) actuators. The diagram illustrates how each servo's axis of rotation contributes to the overall motion pattern.}
+  \label{fig:servo-layout}
+\end{figure}
+
+\subsection{Parameter Control and Adaptation}
+The implementation allows for real-time adjustment of key locomotion parameters through the web interface:
+
 \begin{itemize}
-    \item No closed-loop feedback for servo positions
-    \item Limited battery life under continuous operation
-    \item WiFi range constraints in certain environments
-    \item Mechanical wear on servo gears during sustained operation
+    \item \textbf{Amplitude}: Controls the maximum angular displacement of servos (10°-45°)
+    \item \textbf{Frequency}: Determines the speed of wave propagation (0.1-2.0 Hz)
+    \item \textbf{Phase Offset}: Sets the phase difference between adjacent segments (30°-90°)
 \end{itemize}
 
-\subsection{Future Improvements}
-Based on the current limitations, several potential improvements are identified:
-\begin{itemize}
-    \item Implementation of position feedback sensors
-    \item Enhanced power management systems
-    \item Additional motion patterns based on biological studies
-    \item Improved mechanical durability through material selection
-\end{itemize}
+These parameters can be adjusted to optimize the robot's movement across different surfaces and conditions. The interface constrains these values within practical ranges to ensure stable locomotion while preventing mechanical stress on the servos.
 
+Our implementation uses the constrain() function to ensure parameters remain within safe operating ranges:
 
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
+\begin{equation}
+\text{amplitude} = \text{constrain}(\text{amplitude}, 10.0, 45.0)
+\end{equation}
+
+\begin{equation}
+\text{frequency} = \text{constrain}(\text{frequency}, 0.1, 2.0)
+\end{equation}
+
+\begin{equation}
+\text{phaseOffset} = \text{constrain}(\text{phaseOffset}, 30.0, 90.0)
+\end{equation}
+
+The effects of these parameters on locomotion performance are illustrated in Figure \ref{fig:param-effects}.
+
+\subsection{Implementation of CPG Network}
+While traditional CPG implementations often use coupled oscillator networks, 
+% \parencite{wang2020cpg}
+ our approach uses a simplified mathematical model that achieves equivalent functionality. The sinusoidal wave generation with appropriate phase relationships effectively simulates the output of a CPG network, where:
+
+\begin{equation}
+\text{CPG}_i(t) = \sin(\omega t + \phi_i)
+\end{equation}
+
+This approach is computationally efficient while still capturing the essential characteristics of biological CPGs. The phase relationships between segments create an interconnected system similar to the coupled oscillators in biological neural circuits.
+
+The update frequency of the motion generation system is set to 50 Hz (with an interval of 20 ms), ensuring smooth motion while being well within the processing capabilities of the ESP32 microcontroller. This frequency is sufficient to maintain fluid, continuous movement patterns while allowing for other system operations such as handling web server requests and data logging.
+
+\subsection{Direction Control}
+The direction of travel is controlled by inverting the phase progression along the body. For forward motion, the phase offset increases from head to tail, while for backward motion, the phase progression is reversed. This mimics the biological control strategy in which the direction of wave propagation determines the direction of movement.
+
+In the implementation, this is achieved through conditional logic in both locomotion functions that selects the appropriate phase calculation based on the \texttt{forwardDirection} boolean variable. This direction control is critical for both locomotion patterns, though the specific implementation differs slightly between lateral undulation and sidewinding to account for the different servo configurations and wave propagation patterns.
+
+A key insight from our implementation is that a critical factor for effective direction control is ensuring the proper relationship between the direction of wave propagation and the desired movement direction. For lateral undulation, forward motion requires a posteroanterior wave (tail to head), while backward motion requires an anteroposterior wave (head to tail).
+%//////////////////
+%//////////////////
+%chapter 4
+%//////////////////
+%//////////////////
 \chapter{Experimental Results and Analysis}
+This chapter presents the performance evaluation of the snake robot. It includes detailed analyses of the movement, and testing with different friction modules. Specific evaluations include motion pattern analysis and power consumption.
 
-\section{Performance Metrics}
-The system's performance was evaluated based on:
+\section{Experimental Setup}
+To evaluate the performance of the neurobiologically inspired snake robot, a series of experiments was conducted under controlled conditions. The primary objective was to assess the different locomotion patterns and analyze how various robot configurations influence movement capabilities.
+
+\subsection{Testing Environment}
+All experiments were conducted on laminate wood flooring, providing a low-friction, uniform surface for consistent testing conditions. For quantitative movement analysis, a testing area was created using:
 \begin{itemize}
-    \item Response time between command input and servo actuation
-    \item Accuracy of amplitude and frequency control
-    \item Stability of WiFi connection during operation
-    \item Battery life under continuous operation
+    \item A horizontal strip of cardboard extending 130 cm, marked with tape at 10 cm intervals
+    \item A vertical strip of cardboard extending 70 cm, marked with tape at 10 cm intervals
 \end{itemize}
 
-\section{Control Parameter Optimization}
-Through experimental testing, optimal parameters were determined:
+This grid setup enabled precise tracking of the robot's two-dimensional movement path, providing reference points for subsequent video analysis. The grid layout is illustrated in Figure~\ref{fig:tracking_setup}.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+        % Draw the testing area
+        \draw[thick] (0,0) rectangle (13,6);
+        
+        % Draw horizontal markers
+        \foreach \x in {0,1,...,13}
+            \draw[thick] (\x,0) -- (\x,-0.3) node[below] {\x0};
+        
+        % Draw vertical markers
+        \foreach \y in {0,1,...,6}
+            \draw[thick] (0,\y) -- (-0.3,\y) node[left] {\y0};
+        
+        % Draw snake robot schematically
+        \draw[thick, snake=snake, segment amplitude=0.5, segment length=1cm] (2,3) -- (6,3);
+        
+        % Draw tracking markers
+        \filldraw[black] (2,3) circle (0.2) node[above] {Tail marker};
+        \filldraw[black] (6,3) circle (0.2) node[above] {Head marker};
+    \end{tikzpicture}
+    \caption{Experimental setup showing the testing area with measurement grid and tracking markers on the snake robot.}
+    \label{fig:tracking_setup}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{media/testing.png}
+\caption{Picture of the Experimental setup}
+\end{figure}
+
+
+%//////////////////////////////////
+%surface beschreibung.............
+%//////////////////////////////////
+
+\subsection{Robot Configurations}
+The robot was tested in three distinct configurations to determine the optimal setup for locomotion on laminate surfaces:
 \begin{itemize}
-    \item Amplitude range: 20° - 45° for stable locomotion
-    \item Frequency range: 0.5 - 2.0 Hz for efficient movement
-    \item Update interval: 50ms for smooth motion
-    \item Phase offset: $\pi/2$ between adjacent segments
+    \item With TPU-printed passive scales (biomimetic approach)
+    \item With wheels on each segment (traditional robotic approach)
+    \item Baseline configuration without additional friction elements
 \end{itemize}
 
-\section{System Limitations}
-Current implementation limitations include:
+Each configuration was evaluated using two locomotion patterns to assess how different friction mechanisms affect movement behavior on the laminate surface.
+
+\subsection{Motion Patterns}
+Two primary locomotion patterns were implemented and tested:
 \begin{itemize}
-    \item WiFi connectivity and response time
-    \item Maximum of 16 servo motors due to ESP32 GPIO limitations
-    \item Update rate constrained by WebServer handling capacity
-    \item Battery life affected by continuous WiFi operation and the high demand of the servos
+    \item Lateral undulation: The most common snake movement pattern, characterized by horizontal sinusoidal waves propagating along the body
+    \item Sidewinding: A more complex 3D motion pattern combining horizontal and vertical waves with a phase difference
 \end{itemize}
 
-% Appendices
+For each pattern, the control parameters in the ESP32 firmware were set to standard values (amplitude: 30°, frequency: 1.0 Hz, phase offset: 60° for lateral undulation.
+
+\subsection{Data Collection Methodology}
+To analyze the locomotion performance, the robot was marked with Red tape indicators at its head and tail sections. Movement was captured on video and analyzed using Kinovea software, a specialized motion analysis tool that enables tracking of markers throughout the movement sequence.
+
+The data collection process consisted of the following steps:
+\begin{enumerate}
+    \item The snake robot was positioned at the grid origin with its markers clearly visible
+    \item The robot was activated using the web interface with the selected locomotion pattern
+    \item Video footage was recorded as the robot moved across the measurement grid
+    \item Kinovea was used to calibrate the video using the strip of cardboards on both axes as illisturated in FigureFigure~\ref{fig:kinovea}
+    \item Head and tail markers were tracked frame by frame throughout the robot's movement
+    \item Tracking data was exported as CSV files containing positional information over time (including horizontal position, vertical position)
+    \item Current consumption was recorded using the ACS712 sensor integrated into the robot's power system
+    \item The data was processed and then Visualized in graphs using a react based code, which was compiled on https://codesandbox.io/. This has simplified the process by also having interactive graphs.
+\end{enumerate}
+
+For each configuration and locomotion pattern, multiple trials were conducted to ensure consistency of results. The movement durations varied between trials, with lateral undulation tests lasting 5-10 seconds and sidewinding tests lasting 4-8 seconds, depending on the configuration.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{media/kinovea.png}
+\caption{Kinovea motion analysis app interface}
+\label{fig:kinovea}
+\end{figure}
+
+%////////////////////////////////////////////
+
+\section{Locomotion Performance Results}
+This section presents a comprehensive analysis of the snake robot's locomotion capabilities based on systematic experimental trials. Multiple configurations were tested to evaluate performance metrics. Tracking data was collected using visual markers positioned at the head and tail segments, enabling quantitative analysis of the robot's movement trajectories under various conditions. The experiments were conducted on a standardized laminate wood surface to ensure consistent environmental conditions across all trials.
+
+\subsection{Effect of Configuration on Locomotion}
+The robot configuration significantly influenced locomotion movement patterns on the laminate wood surface. Analysis of the tracking data revealed distinct movement characteristics for each configuration. Each experiment was repeated at least three times to establish reliable patterns, which were observed with minimal deviations across trials.
+
+\subsection{Locomotion Pattern Analysis}
+Detailed analysis of the tracking data revealed distinct movement characteristics across different robot configurations and locomotion modes. By examining the trajectories of both head and tail segments, several consistent patterns emerged that provide insight into the complex dynamics of snake-like locomotion. The following analysis categorizes these observations into specific aspects of the robot's movement behavior, highlighting key factors that influence performance and stability during operation.
+
+\subsubsection{Differential Weight Distribution Effects}
+A key observation across all configurations was the influence of the robot's weight distribution. The snake-like robot has a noticeably heavier head than the tail, creating an uneven friction distribution along its body. This weight imbalance resulted in the head maintaining better grip on the surface while the lighter tail exhibited greater slippage, particularly in configurations without additional friction elements.
+
+The head's greater mass resulted in more consistent contact with the surface and higher friction, allowing it to serve as an anchor point during movement. In contrast, the tail section frequently displayed observable slippage during propulsive movements, reducing locomotion efficiency and directional stability.
+
+\subsubsection{Lateral Undulation Performance}
+Lateral undulation showed distinct movement characteristics across the different configurations, as illustrated in Figure~\ref{fig:lateral_undulation_analysis}, which presents the horizontal and vertical head and tail positions based on the tracking data.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{media/lateral_undulation_trials.png}
+    \caption{Head and tail trajectory patterns during lateral undulation for different configurations. Data generated from multiple trial runs using React visualization code.}
+    \label{fig:lateral_undulation_analysis}
+\end{figure}
+
+With TPU scales attached, an interesting phenomenon was observed. The head remained in a relatively stationary position with minimal movement, functioning essentially as a pivot point. Meanwhile, the tail exhibited significant lateral slippage and movement. This differential between the stationary head and mobile tail resulted in the snake-like robot effectively rotating around its head position. The scales created such high friction at the head that it became anchored while the tail's movement generated rotational rather than forward motion.
+
+The baseline configuration (without attachments) demonstrated a more distributed movement pattern. Without the additional friction element, the head also experienced slippage, though noticeably less compared to the tail. This allowed for more coordinated forward progression as both head and tail participated in the movement, albeit with the tail still showing greater lateral deviation due to its lighter weight. The reduced friction differential between head and tail in the baseline configuration resulted in less rotational movement and more linear progression.
+
+The wheeled configuration demonstrated the most unified movement pattern during lateral undulation. The wheels created consistent rolling contact points that significantly reduced the slippage differential between head and tail. Both head and tail followed nearly parallel paths with minimal lateral deviation, resulting in a more direct forward progression. The wheels effectively compensated for the weight imbalance by providing uniform friction across the robot's body segments.
+
+\subsubsection{Sidewinding Performance}
+Sidewinding exhibited more complex movement patterns than initially anticipated. When the sidewinding algorithm was activated for forward progression, the robot moved sideways to the right. Interestingly, there was minimal difference in this behavior between the scaled and baseline configurations, suggesting that sidewinding is less dependent on surface friction compared to lateral undulation.
+
+During this rightward sidewinding motion, the tail exhibited significantly more lateral movement than the head. This differential movement resulted in the tail generating a forward progression component while the head maintained a more stable position. The outcome was an arcing trajectory rather than the expected linear path.
+
+When the sidewinding algorithm was executed in reverse, the robot moved to the left with a noticeably different pattern. In this direction, both head and tail showed more unified movement, resulting in a more consistent sideways displacement with less forward progression. This directional asymmetry suggested an underlying structural or algorithmic issue.
+
+Further investigation of the robot's physical structure revealed a slight but significant design flaw. Along the chain of servo connections, a gradual tilt accumulates, resulting in the tail section having asymmetric ground contact. Specifically, one side of the tail maintains more consistent contact with the ground surface than the other. This structural asymmetry explains the different behavior patterns observed in rightward versus leftward sidewinding.
+
+This asymmetric ground contact influenced the ground reaction forces experienced during sidewinding, creating the directional bias observed in the robot's movement. Figure~\ref{fig:sidewinding_analysis} illustrates these trajectory differences between rightward and leftward sidewinding patterns.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{media/sidewinding_direction_comparison.png}
+    \caption{Head and tail trajectory paths during rightward and leftward sidewinding, showing asymmetric movement patterns due to structural tilt. Data compiled from multiple experimental trials and visualized using React-based graphing tools.}
+    \label{fig:sidewinding_analysis}
+\end{figure}
+
+\subsubsection{Friction Enhancement and Movement Coordination}
+A consistent finding across all locomotion patterns was that adding friction elements (either scales or wheels) unified the movement patterns between the head and tail sections. In both locomotion modes, slippage was observed more prominently in the baseline configuration without scales or wheels.
+
+The addition of either scales or wheels served as a critical friction parameter that helped equalize the movement characteristics between the heavier, more stable head and the lighter, more slip-prone tail. This unification effect was particularly pronounced during directional changes, where the baseline configuration often showed the tail "whipping" or sliding unpredictably while the head maintained its intended path.
+
+Repeated trials confirmed this pattern with minimal deviations, suggesting that friction enhancement is a fundamental factor in achieving coordinated snake-like locomotion on smooth surfaces like laminate flooring. The tracking data of head and tail positions on both vertical and horizontal axes consistently demonstrated that reducing the friction differential between body segments leads to more predictable and efficient movement patterns.
+
+\section{Energy Consumption Analysis}
+Power consumption was measured using the ACS712 current sensor integrated into the robot's power system. The ESP32 microcontroller recorded current measurements during operation, providing insights into the energy requirements of different locomotion strategies and configurations. Data was collected across multiple test runs for each locomotion mode and stored in CSV format for subsequent analysis.
+
+\subsection{Experimental Setup and Data Collection}
+For each locomotion mode, multiple experimental runs were conducted to ensure reproducibility and reliability of the measurements. Each experiment was time-synchronized, allowing for direct comparison between runs. The following locomotion modes were tested:
+
+\begin{itemize}
+    \item Idle Mode (robot powered but static)
+    \item Lateral Undulation with Wheels
+    \item Lateral Undulation with Scales
+    \item Lateral Undulation Base (without additional locomotion aids)
+    \item Sidewinding Base
+    \item Sidewinding with Scales
+\end{itemize}
+
+Current measurements were recorded at a sampling rate of approximately 10 Hz, providing sufficient temporal resolution to capture transient effects during motion cycles.
+
+\subsection{Idle Mode Current Draw}
+The idle mode represents the baseline power consumption when the robot is powered but remaining stationary, with servos energized but not in motion.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/idle_mode_current.png}
+    \caption{Current draw in idle mode across multiple experimental runs. The scatter plot shows individual measurements, while the solid line represents the average current.}
+    \label{fig:idle_current}
+\end{figure}
+
+Analysis of the idle mode data revealed:
+\begin{itemize}
+    \item Current Range: 0.08--1.32 A
+    \item Average Current: 0.19 A
+    \item Median Current: 0.14 A
+    \item Standard Deviation: 0.20 A
+\end{itemize}
+
+Even in idle mode, the current draw exhibited periodic fluctuations, likely due to the servos maintaining position against gravitational forces or small mechanical disturbances. These small peaks correspond to the servo motors drawing additional current to maintain their commanded positions.
+
+\subsection{Lateral Undulation Current Analysis}
+Three configurations of lateral undulation were tested: with wheels, with scales, and the base configuration. These configurations allow us to quantify the effect of different friction conditions on power consumption.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/lateral_wheels_current.png}
+    \caption{Current draw during lateral undulation with wheels. The scatter plot shows individual measurements across multiple runs, with the average current trend line overlaid.}
+    \label{fig:lateral_wheels_current}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/lateral_scales_current.png}
+    \caption{Current draw during lateral undulation with scales. The scatter plot shows individual measurements across multiple runs, with the average current trend line overlaid.}
+    \label{fig:lateral_scales_current}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/lateral_base_current.png}
+    \caption{Current draw during lateral undulation in base configuration (without additional locomotion aids). The scatter plot shows individual measurements across multiple runs, with the average current trend line overlaid.}
+    \label{fig:lateral_base_current}
+\end{figure}
+
+Key statistics for lateral undulation modes:
+
+\begin{table}[H]
+    \centering
+    \adjustbox{max width=\textwidth}{
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Configuration} & \textbf{Current Range (A)} & \textbf{Average (A)} & \textbf{Median (A)} & \textbf{Std Dev (A)}\\
+        \hline
+        Lateral Base & 0.06--5.71 & 1.55 & 0.26 & 1.81 \\
+        \hline
+        Lateral Undulation (Wheels) & 0.09--5.42 & 1.56 & 0.30 & 1.71 \\
+        \hline
+        Lateral Undulation (Scales) & 0.08--6.49 & 1.73 & 0.59 & 1.98 \\
+        \hline
+    \end{tabular}
+    }
+    \caption{Current consumption statistics across different lateral undulation configurations.}
+    \label{tab:lateral_current_measurements}
+\end{table}
+
+The data reveals several important findings:
+\begin{itemize}
+    \item Lateral undulation with scales shows the highest average current draw (1.73 A) among the lateral locomotion modes, approximately 11\% higher than with wheels.
+    \item The higher median value for scales configuration (0.59 A vs 0.30 A for wheels) indicates that scales consistently require more power throughout the motion cycle.
+    \item All configurations exhibit significant current spikes, with the scales configuration reaching the highest peaks (up to 6.49 A), likely during direction changes or when overcoming static friction.
+    \item The larger standard deviation in the scales configuration (1.98 A) suggests more variable power requirements depending on the phase of the motion pattern.
+\end{itemize}
+
+\subsection{Sidewinding Current Analysis}
+Sidewinding represents a more complex three-dimensional motion pattern that involves coordinated vertical and horizontal movements. Two configurations were tested: the base sidewinding pattern and sidewinding with scales.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/sidewinding_base_current.png}
+    \caption{Current draw during sidewinding in base configuration. The scatter plot shows individual measurements across multiple runs, with the average current trend line overlaid.}
+    \label{fig:sidewinding_base_current}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/sidewinding_scales_current.png}
+    \caption{Current draw during sidewinding with scales. The scatter plot shows individual measurements across multiple runs, with the average current trend line overlaid.}
+    \label{fig:sidewinding_scales_current}
+\end{figure}
+
+Key statistics for sidewinding modes:
+
+\begin{table}[H]
+    \centering
+    \adjustbox{max width=\textwidth}{
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Configuration} & \textbf{Current Range (A)} & \textbf{Average (A)} & \textbf{Median (A)} & \textbf{Std Dev (A)}\\
+        \hline
+        Sidewinding Base & 0.08--5.51 & 2.29 & 2.03 & 1.95 \\
+        \hline
+        Sidewinding (Scales) & 0.09--6.15 & 2.60 & 2.55 & 2.21 \\
+        \hline
+    \end{tabular}
+    }
+    \caption{Current consumption statistics across different sidewinding configurations.}
+    \label{tab:sidewinding_current_measurements}
+\end{table}
+
+Analysis of the sidewinding data reveals:
+\begin{itemize}
+    \item Both sidewinding configurations show significantly higher average and median current draw compared to lateral undulation modes, with sidewinding with scales consuming the most power overall (2.60 A average).
+    \item The close values between median and average in sidewinding modes (especially with scales) indicates a more consistent power draw throughout the motion cycle, unlike the lateral modes which showed larger differences between median and average.
+    \item Peak current values during sidewinding with scales reached 6.15 A, indicating substantial instantaneous power demands.
+    \item The high standard deviation in both configurations (1.95-2.21 A) reflects the complex nature of the motion pattern, with significant variations in power requirements during different phases of the movement.
+\end{itemize}
+
+\subsection{Comparative Analysis of Locomotion Modes}
+To better understand the relative energy efficiency of different locomotion strategies, a comparative analysis was performed across all tested configurations.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=12cm]{media/combined_current_comparison.png}
+    \caption{Comparison of average current draw across all tested locomotion modes over a 10-second period. This visualization highlights the relative energy requirements of different motion strategies and configurations.}
+    \label{fig:combined_current}
+\end{figure}
+
+\begin{table}[H]
+    \centering
+    \adjustbox{max width=\textwidth}{
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Locomotion Mode} & \textbf{Current Range (A)} & \textbf{Average (A)} & \textbf{Median (A)} & \textbf{Std Dev (A)} \\
+        \hline
+        Idle Mode & 0.08--1.32 & 0.19 & 0.14 & 0.20 \\
+        \hline
+        Lateral Undulation (Wheels) & 0.09--5.42 & 1.56 & 0.30 & 1.71 \\
+        \hline
+        Lateral Undulation (Scales) & 0.08--6.49 & 1.73 & 0.59 & 1.98 \\
+        \hline
+        Lateral Base & 0.06--5.71 & 1.55 & 0.26 & 1.81 \\
+        \hline
+        Sidewinding Base & 0.08--5.51 & 2.29 & 2.03 & 1.95 \\
+        \hline
+        Sidewinding (Scales) & 0.09--6.15 & 2.60 & 2.55 & 2.21 \\
+        \hline
+    \end{tabular}
+    }
+    \caption{Comprehensive current consumption statistics across all locomotion modes.}
+    \label{tab:current_measurements_complete}
+\end{table}
+
+Key comparative findings:
+\begin{itemize}
+    \item \textbf{Idle vs. Active Motion:} Any form of locomotion increases power consumption dramatically, with lateral undulation requiring approximately 8.2 times more power than idle mode (1.56-1.73 A vs. 0.19 A), and sidewinding requiring 12-13.7 times more power (2.29-2.60 A vs. 0.19 A).
+    
+    \item \textbf{Lateral Undulation Configurations:} The three lateral undulation configurations showed similar average current draw, with the scales configuration consuming only marginally more power (1.73 A) than the wheels (1.56 A) and base (1.55 A) configurations. However, the median values reveal that the scales configuration (0.59 A) maintains a higher baseline current throughout the motion cycle compared to the other configurations (0.26-0.30 A).
+    
+    \item \textbf{Sidewinding vs. Lateral Undulation:} Sidewinding motion patterns consume substantially more power than lateral undulation, with sidewinding with scales requiring approximately 50\% more energy than lateral undulation with scales (2.60 A vs. 1.73 A). This confirms that three-dimensional motion patterns involving both horizontal and vertical servo activation are significantly more power-intensive.
+    
+    \item \textbf{Effect of Scales:} The addition of scales consistently increased power consumption across both motion patterns, with a more pronounced effect in sidewinding (13.5\% increase) compared to lateral undulation (11\% increase). This highlights the impact of increased friction on energy requirements.
+    
+    \item \textbf{Peak Current Analysis:} All locomotion modes exhibited significant current spikes, with the highest peaks occurring in the lateral undulation with scales configuration (6.49 A). These spikes typically occurred during direction changes or when overcoming initial static friction. The high variability in current draw (as indicated by the large standard deviations) suggests opportunities for energy optimization by smoothing acceleration and deceleration profiles.
+    
+    \item \textbf{Consistency of Motion:} Sidewinding modes showed higher median values closer to their averages, indicating more consistent power draw throughout the motion cycle. In contrast, lateral undulation modes showed much lower median values compared to their averages, suggesting more intermittent high-current phases separated by lower-power periods.
+\end{itemize}
+
+
+
+%//////////////////
+%//////////////////
+%chapter 5
+%//////////////////
+%//////////////////
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+This thesis has presented the development, implementation, and experimental evaluation of a neurobiologically inspired control system for a snake-like robot. The primary objectives were to (1) design and 3D-print a modular mechanical structure using Onshape, (2) integrate an ESP32 microcontroller with ten servo motors to achieve biomimetic locomotion, and (3) implement Central Pattern Generators (CPGs) in Arduino IDE to realize biologically-inspired movement patterns. The experimental results demonstrate that this approach can produce effective serpentine locomotion while maintaining relative simplicity in hardware and software design.
+
+\section{Summary of Contributions}
+\label{sec:contribution}
+
+The main contribution of this work is the successful implementation of a biomimetic snake robot utilizing neurobiologically inspired control principles. A segment-based design was created in Onshape to emulate serpentine motion, enabling modular, repeatable segments that could be easily 3D-printed. The structure successfully balanced weight distribution concerns while providing sufficient robustness for extended testing. Three distinct configurations were developed and tested: a baseline version, one with TPU-printed passive scales representing a biomimetic approach, and one with wheels on each segment.
+
+The hardware system was built around an ESP32 microcontroller serving as the central controller, interfacing with ten servo motors arranged in alternating horizontal and vertical orientations. This arrangement allowed for both lateral undulation and sidewinding motion patterns. The system was complemented with an ACS712 current sensor for power consumption analysis and a web interface for real-time control and data collection, enabling comprehensive performance evaluation during experimentation.
+
+Two primary locomotion patterns were successfully implemented through CPG-inspired algorithms: lateral undulation and sidewinding. These algorithms generated sinusoidal wave patterns with configurable parameters including amplitude, frequency, and phase offset, closely mimicking biological snake movement. The implemented control system allowed for real-time parameter adjustment, enabling exploration of different movement characteristics and their impact on locomotion performance.
+
+Extensive experimental testing was conducted using a structured grid environment and motion tracking software (Kinovea) to analyze the robot's movement patterns. The experiments yielded quantitative data on movement characteristics across different configurations and locomotion patterns, as well as detailed energy consumption measurements for all tested modes. This comprehensive analysis provided valuable insights into the complex relationships between mechanical configuration, control parameters, and resulting motion characteristics.
+
+\section{Key Findings}
+\label{sec:findings}
+
+This section synthesizes the primary insights gained from the systematic evaluation of the snake robot's performance across multiple configurations and locomotion patterns.
+
+\subsection{Locomotion Performance}
+\label{subsec:loco_findings}
+
+The experimental evaluation revealed that different robot configurations exhibited distinct movement characteristics that significantly impacted locomotion performance. The wheeled configuration provided the most uniform movement during lateral undulation, with minimal lateral deviation and the most direct forward progression. In contrast, the TPU scales configuration created such high friction at the head that it became anchored while the tail's movement generated rotational rather than forward motion.
+
+A key observation across all configurations was the influence of the robot's uneven weight distribution. The snake-like robot had a noticeably heavier head than tail, creating an uneven friction distribution along its body. This weight imbalance resulted in the head maintaining better grip on the surface while the lighter tail exhibited greater slippage, particularly in configurations without additional friction elements. The head's greater mass resulted in more consistent contact with the surface and higher friction, allowing it to serve as an anchor point during movement. In contrast, the tail section frequently displayed observable slippage during propulsive movements, reducing locomotion efficiency and directional stability.
+
+Sidewinding exhibited more complex movement patterns than initially anticipated. When the sidewinding algorithm was activated for forward progression, the robot moved sideways to the right with minimal difference in behavior between the scaled and baseline configurations. This suggested that sidewinding is less dependent on surface friction compared to lateral undulation. Interestingly, rightward sidewinding produced a slight arcing trajectory rather than the expected linear path, while leftward sidewinding showed more unified movement with consistent sideways displacement and less forward progression.
+
+Further investigation revealed that a slight but significant structural asymmetry in the robot's design—specifically a gradual tilt accumulation along the servo chain—affected ground contact distribution and created directional bias during sidewinding movements. This asymmetric ground contact influenced the ground reaction forces experienced during sidewinding, explaining the directional bias observed in the robot's movement.
+
+A consistent finding across all locomotion patterns was that adding friction elements (wheels) significantly unified the movement patterns between the head and tail sections. This unification effect was particularly pronounced during directional changes, where the baseline configuration often showed the tail "whipping" or sliding unpredictably while the head maintained its intended path.
+
+\subsection{Energy Consumption}
+\label{subsec:energy_findings}
+
+The energy consumption analysis revealed significant differences between locomotion modes and configurations. Sidewinding movements required substantially more power than lateral undulation, with sidewinding with scales requiring approximately 50\% more energy than lateral undulation with scales (2.60 A vs. 1.73 A average current draw). This confirmed that three-dimensional motion patterns involving both horizontal and vertical servo activation are significantly more power-intensive.
+
+The addition of scales consistently increased power consumption across both motion patterns, with a more pronounced effect in sidewinding (13.5\% increase) compared to lateral undulation (11\% increase). This highlighted the impact of increased friction on energy requirements. The three lateral undulation configurations showed similar average current draw, with the scales configuration consuming only marginally more power than the wheels and base configurations. However, the median values revealed that the scales configuration maintained a higher baseline current throughout the motion cycle compared to the other configurations.
+
+\section{Limitations of the Current Implementation}
+\label{sec:limitations}
+
+Despite the promising results, several limitations were encountered during the experimental phase. One of the primary hardware constraints was the use of SG90 servos, which, while lightweight and compact, provided limited torque. This reduced the robot's ability to execute high-amplitude motions effectively and constrained its overall force output. Additionally, the system was powered by a single 18650 battery, which not only restricted the operating time but also limited the available power supply for the servos. As a result, maintaining consistent motion and torque output over extended periods proved challenging.
+
+Another constraint arose from the ESP32's limited number of GPIO pins, which imposed a restriction on the number of servos that could be controlled simultaneously, limiting the potential for further expansion.Also the structural tilt along the robot body affected movement symmetry and ground contact distribution, creating the directional bias observed during sidewinding locomotion.
+
+Beyond hardware limitations, several challenges were noted in software and control. The web-based control system, while functional, suffered from occasional WiFi interruptions, especially in environments with multiple overlapping networks, which impacted real-time responsiveness. Additionally, the ESP32 had to manage multiple tasks simultaneously, including web server communication, motion generation, and data logging. Under high processing loads, occasional slowdowns were observed, affecting the fluidity of motion execution.
+
+Perhaps the most significant control limitation was the lack of direct feedback in the system. Operating in an open-loop configuration meant that there was no real-time positional or orientation feedback, making it difficult to dynamically adjust movements or compensate for external disturbances. This limited the robot's ability to adapt to changing environmental conditions or unexpected obstacles during locomotion.
+
+\section{Future Improvements}
+\label{sec:futureWork}
+Based on the experimental results and performance analysis, several potential enhancements have been identified that could address the limitations observed in the current snake robot prototype. These improvements target specific aspects of the robot's design and functionality to enhance its locomotion capabilities.
+
+\subsection{Enhanced Mechanical Design}
+\label{subsec:mechanical_improvements}
+
+Future iterations of the snake robot design should address the uneven weight distribution that causes differential friction between head and tail sections. A more balanced weight arrangement would promote more uniform movement and reduce unintended rotational tendencies during lateral undulation. This could be achieved through careful redistribution of electronic components or the strategic addition of counterweights in the tail section. Simultaneously, improvements in mechanical design should focus on eliminating the gradual tilt accumulation along the servo chain that created directional bias in sidewinding motion. More precise alignment mechanisms and structural reinforcement could mitigate this issue, ensuring more symmetrical movement in both directions.
+Selective reinforcement at high-stress connection points could enhance longevity without significantly increasing weight.
+Developing interchangeable friction elements would further enhance the robot's versatility across varied terrains. The current experimental results clearly demonstrated that different friction mechanisms (scales, wheels, or the baseline configuration) offer distinct advantages depending on the desired movement pattern and surface characteristics. A modular design allowing quick interchange between these configurations would enable rapid adaptation to changing environmental conditions and locomotion requirements.
+
+\subsection{Power System Enhancements}
+\label{subsec:power_improvements}
+
+The energy consumption analysis highlighted several opportunities for power system improvements. Upgrading to higher capacity batteries or implementing a dual-battery system would extend operational runtime, particularly for power-intensive movements like sidewinding. The current consumption data indicates that sidewinding requires approximately 50\% more energy than lateral undulation, suggesting that power capacity is a critical factor for robots intended to utilize this movement pattern extensively.
+
+Replacing the SG90 servos with higher-torque, more energy-efficient alternatives would improve motion capability while potentially reducing peak current demands through better mechanical efficiency. More powerful servos would also enable more reliable execution of high-amplitude movements, potentially improving locomotion effectiveness on challenging terrains. The current spikes observed during motion transitions suggest that implementing intelligent power management that dynamically adjusts servo parameters based on battery state and motion requirements could significantly extend operational duration.
+Developing smoother acceleration and deceleration profiles could reduce the current spikes observed during transitions, potentially lowering peak power demands and improving overall efficiency. 
+
+\subsection{Low-Latency Control with ESP-NOW}
+\label{subsec:esp_now_control}
+
+While the web interface provided a functional control mechanism for the snake robot, it introduced noticeable latency due to the HTTP request processing and potential WiFi network congestion. Future iterations of the system could benefit significantly from implementing ESP-NOW, a peer-to-peer protocol developed by Espressif that offers lower latency and reduced power consumption compared to traditional WiFi connections.
+
+ESP-NOW would enable the development of a dedicated handheld controller using another ESP32 board, creating a direct communication channel with the snake robot. This approach offers several key advantages: response times could be reduced from hundreds of milliseconds to less than 10ms, providing near real-time control that would allow for more precise manipulation of the robot's movements. The protocol's lightweight nature would reduce the processing overhead on the ESP32 controller, potentially freeing computational resources for more complex locomotion algorithms or sensor processing.
+Additionally, ESP-NOW's simplified connection mechanism eliminates the need for the snake robot to maintain an access point and web server, reducing power consumption and extending battery life. The protocol also offers greater operational range compared to the current web interface approach, potentially allowing control from distances of up to 400 meters in open areas. Implementation would require developing a custom controller with joysticks, buttons, and potentially a small display to provide feedback on robot parameters such as battery status and current locomotion mode.
+For educational and research applications, this system could be extended to allow seamless switching between autonomous operation (utilizing the CPG algorithms) and direct operator control.
+
+
+\subsection{Advanced Control Algorithms}
+\label{subsec:control_improvements}
+
+The open-loop control system used in the current implementation showed promising results but lacked the ability to adapt to changing conditions or compensate for structural asymmetries. Integrating sensors such as IMUs (Inertial Measurement Units) would enable closed-loop control, allowing the robot to adapt its movement based on real-time feedback about its position, orientation, and movement characteristics. This feedback could be used to dynamically adjust CPG parameters to maintain desired movement trajectories despite environmental disturbances or mechanical asymmetries.
+
+Machine learning algorithms could be implemented to dynamically adjust CPG parameters (frequency, amplitude, phase offset) based on environmental conditions and performance feedback. This adaptive approach could optimize locomotion efficiency across different terrains by automatically selecting the most effective parameter combinations based on sensed conditions and movement outcomes. The system could learn from experience, progressively refining its parameter selection to improve performance over time.
+
+\subsection{Extended Applications}
+\label{subsec:applications}
+
+The modular snake-like robot design developed in this thesis has potential applications beyond the experimental context. With further development, the system could be adapted for confined-space exploration and search and rescue operations, leveraging its ability to navigate narrow passages inaccessible to traditional robots. The snake's flexible body configuration and ability to execute three-dimensional movement patterns make it well-suited for traversing complex environments with limited clearance.
+
+The design could also be adapted for pipeline or structural inspection tasks by integrating appropriate sensors and enhancing the robot's ability to navigate vertical surfaces. The potential for sidewinding movement on inclined surfaces, combined with the robot's elongated body, makes it a promising platform for industrial inspection applications where access is limited and maneuverability is essential.
+
+In educational contexts, simplified versions of the system could serve as platforms for teaching principles of biomimetic robotics, control systems, and 3D design and fabrication. The accessible hardware platform (ESP32) and software environment (Arduino IDE) make the system approachable for educational purposes, while the clear relationship between biological principles and robotic implementation provides valuable learning opportunities.
+
+Exploring the potential for multiple snake robots to coordinate their movements could lead to novel applications in distributed sensing or collaborative manipulation tasks. For example, a group of snake robots could form temporary structures or cooperatively transport objects by leveraging their flexible bodies and varied movement capabilities.
+
+\section{Concluding Remarks}
+\label{sec:concludingRemarks}
+
+This thesis has demonstrated that a neurobiologically inspired approach to snake robot design and control can produce effective biomimetic locomotion using accessible hardware and software platforms. The detailed experimental analysis has provided valuable insights into the complex relationships between mechanical configuration, control parameters, and movement characteristics, highlighting both the potential and challenges of snake-like robotic systems.
+
+The findings underscore the importance of considering weight distribution, ground contact dynamics, and energy efficiency in biomimetic robot design. The significant differences observed between locomotion patterns and configurations emphasize the need for adaptive, context-sensitive control approaches that can leverage the unique advantages of different movement strategies. The energy consumption analysis revealed important trade-offs between movement capability and operational duration, providing a foundation for future optimization efforts.
+
+While the current implementation has certain limitations in terms of hardware capabilities and control sophistication, it provides a solid foundation for future research and development. The modular design approach, combined with the accessible ESP32 platform and Arduino IDE environment, creates a flexible experimental platform that can evolve to address increasingly complex challenges in biomimetic robotics.
+
+As this field continues to advance, the integration of more sophisticated sensing, adaptive control algorithms, and optimized mechanical designs will push the boundaries of what snake-like robots can achieve. These systems hold significant promise for applications ranging from search and rescue operations to industrial inspection where their unique locomotion capabilities provide advantages over traditional wheeled or legged robots.
+
+The neurobiological principles that inspired this work remain a rich source of insights for future robotic systems, highlighting how the elegant solutions evolved in biological organisms can inform the development of more adaptive, efficient, and versatile robotic technologies. By continuing to draw inspiration from nature while leveraging advances in materials, sensors, and computational capabilities, we can develop increasingly sophisticated biomimetic robots that combine the best aspects of biological and engineered systems.
+
+
+
+% Appendices 
 \appendix
 %//////////////////////////////////////
 %//////////////////////////////////////
@@ -571,139 +985,126 @@ Current implementation limitations include:
 \chapter{Hardware Specifications}
 \section{Mechanical Design}
 \subsection{3D Printed Components}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-The robotic system comprises several 3D-printed parts designed for structural integrity, modularity, and functionality. Below are the primary components:
+
+The snake robot is constructed from a variety of meticulously designed 3D-printed components, each engineered for structural integrity, modularity, and optimal functionality. All parts are 3D printed using PETG, PLA, PLA+, and TPU filaments, with tailored print settings that balance detail, strength, and weight.
+
 \FloatBarrier
 \subsubsection{Head Assembly}
-
-The head is split into two sections: \textbf{top-head} and \textbf{bottom-head}, which encase sensors and other electronics.
-
+The head assembly is divided into two primary sections: the \textbf{top-head} and the \textbf{bottom-head}. Together, they not only secure critical sensors and electronics but also enhance the aesthetic and structural characteristics of the robot. Key attributes include:
 \begin{itemize}
-\item Material: PETG
-\item Print Settings: 0.2mm layer height, 30\%  gyroid infill
-\item Features:
-\begin{itemize}
-% \item Eye placeholders for sensors
-\item Reinforced mounting slots
-\item Structured surface for aesthetics and strength
+    \item \textbf{Material:} PETG
+    \item \textbf{Print Settings:} 0.2\,mm layer height with 30\% gyroid infill
+    \item \textbf{Design Features:}
+    \begin{itemize}
+        \item Reinforced mounting slots for secure sensor and electronics placement
+        \item A structured surface that blends visual appeal with mechanical strength
+    \end{itemize}
 \end{itemize}
-\end{itemize}
-\begin{figure}[h]
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{media/Head.png}
+\caption{Complete head assembly}
+\par\vspace{4 mm}
 \includegraphics[width=0.5\textwidth]{media/Bottom-Head.png}
+\caption{Bottom head assembly}
+\par\vspace{4 mm}
 \includegraphics[width=0.5\textwidth]{media/top-head.png}
-\caption{Top and bottom head assembly}
+\caption{Combined view of the top and bottom head sections}
 \end{figure}
 
 \FloatBarrier
 \subsubsection{Tail Structure}
-
-The \textbf{tail-part} connects the main body to the rear stabilizers and allows controlled movement.
-
+The tail serves as a critical connector between the main body and the rear stabilizers, enabling controlled movement. Its design emphasizes both functionality and ease of integration:
 \begin{itemize}
-\item Material: PETG
-\item Print Settings: 0.2mm layer height, 25% infill
-\item Features:
-\begin{itemize}
-\item Reinforced mounting points for servos
-\item Aerodynamic design
-\item Cable routing slots
+    \item \textbf{Material:} PETG
+    \item \textbf{Print Settings:} 0.2\,mm layer height with 30\% infill
+    \item \textbf{Key Features:}
+    \begin{itemize}
+        \item Reinforced mounting points designed for servo attachment
+        \item Aesthetical rattlesnake tail design
+    \end{itemize}
 \end{itemize}
-\end{itemize}
-\begin{figure}[h]
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{media/Tail-part.png}
-\caption{tail-part assembly}
+\caption{Tail structure assembly}
 \end{figure}
 
 \FloatBarrier
 \subsubsection{Scales for Friction Optimization}
-
-The \textbf{scales-scaled} part consists of an array of overlapping scales designed to improve friction control during movement.
-
+To enhance traction and optimize friction during movement, the robot incorporates an array of overlapping scales. These components are engineered for both flexibility and durability:
 \begin{itemize}
-\item Material: PETG
-\item Print Settings: 0.15mm layer height for fine details
-\item Features:
-\begin{itemize}
-\item Lightweight yet strong design
-\item Flexible attachment points
-\item Surface texture optimized for traction
+    \item \textbf{Material:} TPU
+    \item \textbf{Print Settings:} 0.1\,mm layer height to capture fine details
+    \item \textbf{Design Characteristics:}
+    \begin{itemize}
+        \item Lightweight construction without compromising strength
+        \item Flexible attachment points to adapt during motion
+        \item A textured surface optimized for improved traction
+    \end{itemize}
 \end{itemize}
-\end{itemize}
-\begin{figure}[h]
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{media/scales.png}
-\caption{3D printed scales for movement enhancement}
+\caption{3D printed scales for enhanced movement}
 \end{figure}
 
 \FloatBarrier
 \subsubsection{Servo Holders}
-
-Two types of servo mounts are used: \textbf{horizontal-holder} and \textbf{vertical-holder}, ensuring flexibility in positioning.
-
+Servo holders are integral to the robot's actuation system, providing secure and versatile mounting options for the servos. Two configurations are used:
 \begin{itemize}
-\item Material: PETG
-\item Print Settings: 0.2mm layer height, 40% infill for strength
-\item Features:
-\begin{itemize}
-\item Snap-fit design for easy installation
-\item Integrated cable management slots
-\item Reinforced screw holes for secure mounting
-\end{itemize}m
+    \item \textbf{Material:} PETG
+    \item \textbf{Print Settings:} 0.2\,mm layer height with 30\% infill for maximum strength
+    \item \textbf{Features:}
+    \begin{itemize}
+        \item A snap-fit design that simplifies installation and removal
+        \item Screw holes ensuring a stable and secure mounting
+    \end{itemize}
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.5\textwidth]{media/Vertical-holder.png}
+\caption{Vertical servo holder}
+\par\vspace{4 mm}
 \includegraphics[width=0.5\textwidth]{media/Horizontal-holder.png}
-\caption{Horizontal and Vertical servo holder}
+\caption{Horizontal servo holder}
 \end{figure}
 
-These components work together to form a bio-inspired robotic system with optimized movement and structural robustness.
-%//////////////////////////////////////
-%//////////////////////////////////////
-\subsubsection{Main Body Segments}
+\FloatBarrier
+\subsubsection{Wheelbase, Wheel, and Tire}
+A robust locomotion system is realized through the integration of a wheelbase, wheels, and tires:
 \begin{itemize}
-\item Primary segment specifications:
+    \item \textbf{Wheelbase:} Positioned beneath the main body segments, each unit supports two small wheels to stabilize movement.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{media/Wheelbase.png}
+\caption{Wheelbase assembly}
+\end{figure}
+
 \begin{itemize}
-\item Dimensions: 40mm x 40mm x 65mm (height x width x length)
-\item Wall thickness: 2mm primary walls, 3mm reinforced areas
-\item Infill: 30% gyroid pattern for optimal strength/weight ratio
-\item Layer height: 0.2mm for good surface finish and strength
-\item Material: PETG filament (eSun PETG+ or equivalent)
-\item Print orientation: Vertical with supports for servo mounts
-\item Print temperature: 235°C nozzle, 80°C bed
-\item Print speed: 50mm/s outer walls, 80mm/s infill
+    \item \textbf{Wheel:} Engineered for smooth rotation and effective support.
 \end{itemize}
-\item Structural features:
 \begin{itemize}
-    \item Integrated cable routing channels (8mm diameter)
-    \item M3 brass heat-set insert mounting points (x4 per servo)
-    \item Snap-fit segment connectors with 0.2mm tolerance
-    \item Reinforced corners with 1mm fillets
-    \item Ventilation slots for servo cooling
+    \item \textbf{Tire:} Designed to provide optimal traction and cushioning during locomotion.
 \end{itemize}
-\end{itemize}
-\subsubsection{Electronics Housing}
-\begin{itemize}
-\item ESP32 mounting bay:
-\begin{itemize}
-\item Dimensions: 60mm x 40mm x 30mm
-\item Mounting posts for M2.5 screws
-\item Ventilation mesh pattern
-\item Access ports for USB programming
-\end{itemize}
-\item Battery compartment:
-\begin{itemize}
-    \item 2S LiPo battery slot (75mm x 35mm x 20mm)
-    \item Quick-release mechanism
-    \item Strain relief for power cables
-\end{itemize}
-\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{media/Wheel.png}
+\caption{Wheel component}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{media/Tire.png}
+\caption{Tire component}
+\end{figure}
+
 \section{Electronic Components}
 \subsection{Microcontroller Specifications}
 \begin{itemize}
@@ -720,249 +1121,309 @@ These components work together to form a bio-inspired robotic system with optimi
 \end{itemize}
 \end{itemize}
 \subsection{Servo Motor Details}
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{|l|l|}
 \hline
 \textbf{Parameter} & \textbf{Value} \\
 \hline
-Model & MG996R High Torque \\
-Operating Voltage & 4.8V - 7.2V \\
-Stall Torque (4.8V) & 9.4 kg$\cdot$cm \\
-Stall Torque (6.0V) & 11 kg$\cdot$cm \\
-Operating Speed (4.8V) & 0.17 sec/60$^{\circ}$ \\
-Operating Speed (6.0V) & 0.14 sec/60$^{\circ}$ \\
-Operating Angle & 180$^{\circ}$ $\pm$5$^{\circ}$ \\
-Pulse Width Range & 500-2500 microseconds \\
-Direction & Clockwise/Counter Clockwise \\
-Dead Band Width & 1 microsecond \\
-Temperature Range & -30$^{\circ}$C to +60$^{\circ}$C \\
-Gear Type & Metal \\
-Bearing Type & Dual Ball Bearing \\
-Weight & 55g \\
-Dimensions & 40.7 x 19.7 x 42.9 mm \\
+Model & SG90 \\
+Operating Voltage & 4.8\,V -- 6.0\,V \\
+Stall Torque (4.8\,V) & $\approx$1.5\,kg$\cdot$cm \\
+Operating Speed (4.8\,V) & 0.12\,sec/60$^{\circ}$ \\
+Operating Angle & 180$^{\circ}\,\pm\,5^{\circ}$ \\
+Pulse Width Range & 500--2400\,$\mu$s \\
+Direction & Bi-directional (CW/CCW) \\
+Gear Type & Plastic Gears \\
+Weight & 9\,g \\
+Dimensions & 22.8\,$\times$\,12.2\,$\times$\,28.5\,mm \\
 \hline
 \end{tabular}
-\caption{Detailed Servo Motor Specifications}
+\caption{SG90 servo motor specifications.}
 \end{table}
+
 \subsection{Power System}
 \begin{itemize}
-\item Battery:
-\begin{itemize}
-\item Type: 2S LiPo
-\item Capacity: 2200mAh
-\item Voltage: 7.4V nominal
-\item C-Rating: 25C continuous
-\item Weight: 135g
+    \item \textbf{Battery:}
+    \begin{itemize}
+        \item \textit{Type}: Single 18650 Li-ion cell
+        \item \textit{Voltage}: 3.7\,V nominal (4.2\,V max)
+        \item \textit{Capacity}: (varies by cell, e.g., 2200\,mAh)
+        \item \textit{Weight}: $\approx$45\,g (typical for 18650)
+    \end{itemize}
+
+    \item \textbf{Power Distribution:}
+    \begin{itemize}
+        \item Buck converter regulating output to 5\,V for servos and controller
+        \item Simple on/off switch for power control
+        \item Note: The user must monitor battery voltage externally (no built-in protection circuit)
+    \end{itemize}
 \end{itemize}
-\item Power Distribution:
-\begin{itemize}
-    \item Custom PCB power distribution board
-    \item 5V voltage regulator for ESP32
-    \item Direct 7.4V supply for servos
-    \item Current monitoring shunt resistor
-    \item Power switch with LED indicator
-    \item Low voltage cutoff at 6.6V
-\end{itemize}
-\end{itemize}   
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-\chapter{Software Documentation}
 
-\section{System Architecture Overview}
-The snake robot's control software is implemented on an ESP32 microcontroller using the Arduino IDE. The system integrates multiple components for comprehensive robot control, including servo motor control, wireless communication, locomotion pattern generation, and real-time monitoring capabilities.
+ 
+%//////////////////////////////////////
+%//////////////////////////////////////
+%//////////////////////////////////////
+%//////////////////////////////////////
+%//////////////////////////////////////
 
-\section{Core Implementation}
-\subsection{System Configuration}
-The fundamental configuration defines the robot's physical structure and control parameters:
+\chapter{Snake Robot Software Implementation}
 
-\begin{lstlisting}[language=C++]
+\section{System Architecture}
+The snake robot's control software is implemented on an ESP32 microcontroller using the Arduino IDE. The system architecture comprises several integrated components:
+
+\begin{enumerate}
+    \item \textbf{Motion Control System}: Implements two primary locomotion patterns (lateral undulation and sidewinding)
+    \item \textbf{Servo Motor Management}: Controls 10 servo motors in a specific layout (7 horizontal, 3 vertical)
+    \item \textbf{Web-Based Interface}: Provides remote control through a WiFi access point and user-friendly HTML interface
+    \item \textbf{Current Monitoring}: Measures power consumption with ACS712 current sensor
+    \item \textbf{Data Logging System}: Records current measurements to the ESP32's SPIFFS filesystem
+    \item \textbf{Diagnostic Tool}: Includes servo-testing.
+\end{enumerate}
+
+\section{Hardware Configuration}
+
+\subsection{Servo Configuration}
+The robot consists of 10 servo motors with a specific arrangement of horizontal and vertical actuators:
+
+\begin{minted}[frame=single, linenos, breaklines, breakanywhere, fontsize=\footnotesize]{c++}
 // Servo configuration
 const int NUM_SERVOS = 10;
 const int NUM_HORIZONTAL = 7;  // Number of horizontal servos
-const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; 
-// 1=horizontal, 0=vertical
+const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; // 1=horizontal, 0=vertical
 const int servoPins[NUM_SERVOS] = {23, 22, 2, 4, 16, 17, 5, 18, 19, 21};
+\end{minted}
 
-// Motion control parameters
-float amplitude = 30.0;      // Degrees
-float frequency = 1.0;       // Hz
-float phaseOffset = 60.0;    // Degrees
-float centerPosition = 90.0; // Degrees
-float verticalAmplitude = 20.0;  // For sidewinding
-float verticalPhaseOffset = 90.0; // Degrees
-\end{lstlisting}
+\subsection{Sensor Configuration}
+The current sensing is implemented using an ACS712 current sensor:
 
-\subsection{Motion Control System}
-The software implements two primary locomotion patterns: lateral undulation and sidewinding. These patterns are implemented through specialized functions that calculate servo positions based on sinusoidal wave propagation.
+\begin{minted}[frame=single, linenos, breaklines, breakanywhere]{c++}
+const int analogPin = 34;
+ACS712 sensor(analogPin, 3.3, 4095, 100.0); // pin, voltage, ADC max, mV/A sensitivity
+\end{minted}
 
-\subsubsection{Lateral Undulation}
-The lateral undulation pattern, typical for snake locomotion on flat surfaces:
+\section{Locomotion Control System}
 
-\begin{lstlisting}[language=C++]
+\subsection{Motion Parameters}
+The locomotion patterns are controlled by the following parameters:
+
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere, fontsize=\footnotesize]{c++}
+// Locomotion parameters
+float amplitude = 30.0;           // Degrees
+float frequency = 1.0;            // Hz
+float phaseOffset = 60.0;         // Degrees
+float verticalAmplitude = 20.0;   // For sidewinding (degrees)
+float verticalPhaseOffset = 90.0; // 90 degrees offset for sidewinding
+float centerPosition = 90.0;      // Degrees
+\end{minted}
+
+\subsection{Lateral Undulation}
+The lateral undulation algorithm generates a sinusoidal wave that propagates through the horizontal servos:
+
+\begin{minted}[frame=single, linenos, breaklines, breakanywhere]{c++}
 void updateServosLateralUndulation() {
-    float timeScale = millis() * 0.001 * frequency * 2 * PI;
-    int horizontalIndex = 0;
-    
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        if (servoLayout[i] == 1) {  // Horizontal servos
-            float segmentPhase = horizontalIndex * 
-                               radians(phaseOffset);
-            
-            if (!forwardDirection) {
-                segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * 
-                             radians(phaseOffset);
-            }
-            
-            float angle = centerPosition + 
-                         amplitude * sin(timeScale + segmentPhase);
-            servos[i].write(angle);
-            horizontalIndex++;
-        } else {  // Vertical servos
-            servos[i].write(centerPosition);
-        }
+  float timeScale = millis() * 0.001 * frequency * 2 * PI;
+  int horizontalIndex = 0;
+  
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (servoLayout[i] == 1) {  // Horizontal servos
+      float segmentPhase;
+      
+      if (forwardDirection) {
+        // For forward motion, reverse the phase progression
+        segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset);
+      } else {
+        // For backward motion, use the original phase progression
+        segmentPhase = horizontalIndex * radians(phaseOffset);
+      }
+      
+      // Calculate servo angle with full amplitude
+      float angle = centerPosition + amplitude * sin(timeScale + segmentPhase);
+      
+      servos[i].write(angle);
+      horizontalIndex++;
+    } else {  // Vertical servos remain centered
+      servos[i].write(centerPosition);
     }
+  }
 }
-\end{lstlisting}
+\end{minted}
 
-\subsubsection{Sidewinding Motion}
-The sidewinding pattern, which enables movement in more challenging terrains:
+\subsection{Sidewinding Motion}
+The sidewinding algorithm creates coordinated waves in both horizontal and vertical planes:
 
-\begin{lstlisting}[language=C++]
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere]{c++}
 void updateServosSidewinding() {
-    float timeScale = millis() * 0.001 * frequency * 2 * PI;
-    int horizontalIndex = 0;
-    int verticalIndex = 0;
+  float timeScale = millis() * 0.001 * frequency * 2 * PI;
+  int horizontalIndex = 0;
+  int verticalIndex = 0;
 
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        if (servoLayout[i] == 1) {
-            float phase = forwardDirection ? 
-                radians(horizontalIndex * phaseOffset) : 
-                radians((NUM_HORIZONTAL - 1 - horizontalIndex) * 
-                phaseOffset);
-            
-            float angle = centerPosition + 
-                         amplitude * sin(timeScale + phase);
-            servos[i].write(angle);
-            horizontalIndex++;
-        } else {
-            float phase = radians(verticalIndex * phaseOffset + 
-                                verticalPhaseOffset);
-            float angle = centerPosition + 
-                         verticalAmplitude * sin(timeScale + phase);
-            servos[i].write(angle);
-            verticalIndex++;
-        }
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (servoLayout[i] == 1) {  // Horizontal servos
+      float phase = forwardDirection ? 
+        radians((NUM_HORIZONTAL - 1 - horizontalIndex) * phaseOffset) : 
+        radians(horizontalIndex * phaseOffset);
+      
+      float angle = centerPosition + amplitude * sin(timeScale + phase);
+      servos[i].write(angle);
+      horizontalIndex++;
+    } else {  // Vertical servos
+      float basePhase = verticalIndex * phaseOffset + verticalPhaseOffset;
+      float phase = forwardDirection ? 
+        radians((NUM_SERVOS - NUM_HORIZONTAL - 1 - verticalIndex) * phaseOffset + verticalPhaseOffset) : 
+        radians(basePhase);
+      
+      float angle = centerPosition + verticalAmplitude * sin(timeScale + phase);
+      servos[i].write(angle);
+      verticalIndex++;
     }
+  }
 }
-\end{lstlisting}
+\end{minted}
 
-\subsection{Network Communication}
-The system creates a WiFi access point for remote control and implements a web server for user interaction:
+\section{Web-Based Control Interface}
 
-\begin{lstlisting}[language=C++]
+\subsection{Network Configuration}
+The system creates a WiFi access point for remote control:
+
+\begin{minted}[frame=single, linenos]{c++}
 WiFi.softAP("ESP32_Snake", "12345678");
-server.on("/", HTTP_GET, handleRoot);
-server.on("/", HTTP_POST, handleSetParameters);
-server.on("/current", HTTP_GET, handleCurrentData);
-server.on("/download", HTTP_GET, handleDownload);
-\end{lstlisting}
+\end{minted}
 
-\subsection{Parameter Control System}
-The implementation includes a flexible parameter control system that handles user inputs and maintains safe operating ranges:
+\subsection{User Interface}
+The web interface provides controls for:
+\begin{itemize}
+    \item Switching between locomotion modes (Lateral Undulation/Sidewinding)
+    \item Direction control (Forward/Backward)
+    \item Motion parameter adjustment (Amplitude, Frequency, Phase)
+    \item Servo testing and centering
+    \item Current monitoring with real-time display
+    \item Data logging and download capabilities
+\end{itemize}
 
-\begin{lstlisting}[language=C++]
-void handleSetParameters() {
-    String response;
-    
-    if (server.hasArg("mode")) {
-        movementMode = server.arg("mode").toInt();
-    }
-    
-    if (server.hasArg("action")) {
-        String action = server.arg("action");
-        if (action == "forward") {
-            locomotionEnabled = true;
-            forwardDirection = true;
-        } else if (action == "backward") {
-            locomotionEnabled = true;
-            forwardDirection = false;
-        } else if (action == "stop") {
-            locomotionEnabled = false;
-            centerAllServos();
-        }
-    }
+\section{Current Monitoring and Data Logging}
 
-    if (server.hasArg("amplitude")) {
-        amplitude = constrain(server.arg("amplitude").toFloat(), 
-                            10.0, 45.0);
-    }
-    if (server.hasArg("frequency")) {
-        frequency = constrain(server.arg("frequency").toFloat(), 
-                            0.1, 2.0);
-    }
-    if (server.hasArg("phase")) {
-        phaseOffset = constrain(server.arg("phase").toFloat(), 
-                              30.0, 90.0);
-    }
-}
-\end{lstlisting}
+\subsection{Current Measurement}
+The system takes multiple readings to ensure accuracy:
 
-\subsection{Current Monitoring and Data Logging}
-The system implements real-time current monitoring using an ACS712 sensor and logs data to the ESP32's SPIFFS filesystem:
-
-\begin{lstlisting}[language=C++]
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere]{c++}
 void handleCurrentData() {
-    float current = 0.0;
-    for(int i = 0; i < 10; i++) {
-        current += abs(sensor.mA_DC());
-        delay(1);
-    }
-    current = (current / 10.0) / 1000.0;  // Convert to Amps
-    logCurrentData(current);
-    
-    String jsonResponse = "{\"current\": " + String(current, 3) + "}";
-    server.send(200, "application/json", jsonResponse);
+  float current = 0.0;
+  // Take multiple readings for better accuracy
+  for(int i = 0; i < 10; i++) {
+    current += abs(sensor.mA_DC());
+    delay(1);
+  }
+  current = (current / 10.0) / 1000.0;  // Convert to Amps
+  
+  String jsonResponse = "{\"current\": " + String(current, 3) + 
+                        ", \"logging\": " + (loggingEnabled ? "true" : "false") + "}";
+  server.send(200, "application/json", jsonResponse);
 }
+\end{minted}
 
+\subsection{Data Logging}
+The system logs current data to a CSV file with timestamps:
+
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere]{c++}
 void logCurrentData(float current) {
-    File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
-    unsigned long timestamp = millis();
-    file.printf("%lu,%0.3f\n", timestamp, current);
-    file.close();
+  if (!loggingEnabled) return;
+  
+  File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
+  if(!file) {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  
+  // Calculate time in seconds since logging started (with millisecond precision)
+  float elapsedTime = (millis() - loggingStartTime) / 1000.0;
+  
+  // Write data in CSV format: "seconds,current"
+  file.printf("%.3f,%.3f\n", elapsedTime, current);
+  file.close();
 }
-\end{lstlisting}
+\end{minted}
 
-\subsection{Main Control Loop}
-The main loop coordinates all system functions:
+\subsection{Data Download}
+The system provides a way to download collected data as a CSV file:
 
-\begin{lstlisting}[language=C++]
-void loop() {
-    server.handleClient();
-    
-    static unsigned long lastCheck = 0;
-    if (millis() - lastCheck >= 60000) {
-        checkLogFileSize();
-        lastCheck = millis();
-    }
-    
-    if (testingActive) {
-        handleServoTest();
-    }
-    else if (locomotionEnabled && 
-             (millis() - lastUpdate >= interval)) {
-        if (movementMode == 0) {
-            updateServosLateralUndulation();
-        } else {
-            updateServosSidewinding();
-        }
-        lastUpdate = millis();
-    }
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere]{c++}
+void handleDownload() {
+  if(!SPIFFS.exists("/current_log.txt")) {
+    server.send(404, "text/plain", "No data log found");
+    return;
+  }
+
+  File file = SPIFFS.open("/current_log.txt", "r");
+  if(!file) {
+    server.send(500, "text/plain", "Failed to open file");
+    return;
+  }
+
+  // Set up headers for file download
+  server.sendHeader("Content-Type", "text/csv");
+  server.sendHeader("Content-Disposition", "attachment; filename=current_log.csv");
+  server.sendHeader("Connection", "close");
+  
+  // Add CSV header row for better readability
+  String csvHeader = "Time(s),Current(A)\r\n";
+  server.client().write((const uint8_t*)csvHeader.c_str(), csvHeader.length());
+  
+  // Stream file to client
+  size_t fileSize = file.size();
+  server.setContentLength(fileSize + csvHeader.length());
+  
+  // Send file in chunks
+  size_t chunkSize = 1024;
+  uint8_t buf[1024];
+  while(file.available()) {
+    size_t len = file.read(buf, chunkSize);
+    server.client().write(buf, len);
+  }
+  
+  file.close();
 }
-\end{lstlisting}
+\end{minted}
+
+\section{System Initialization}
+The initialization process ensures proper setup of all components:
+
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere, fontsize=\footnotesize]{c++}
+void setup() {
+  Serial.begin(115200);
+  pinMode(analogPin, INPUT);
+  analogReadResolution(12); // ESP32 has 12-bit ADC
+  
+  // Calibrate sensor
+  Serial.println("Calibrating current sensor...");
+  uint16_t midPoint = sensor.autoMidPoint();
+  Serial.printf("Midpoint value: %d\n", midPoint);
+
+  // Initialize SPIFFS
+  if(!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  
+  // Initialize all servos
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    servos[i].attach(servoPins[i]);
+    servos[i].write(centerPosition);
+  }
+  delay(1000);  // Allow servos to reach center position
+
+  // Setup WiFi Access Point
+  WiFi.softAP("ESP32_Snake", "12345678");
+  
+  // Setup server handlers
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/", HTTP_POST, handleSetParameters);
+  server.on("/current", HTTP_GET, handleCurrentData);  
+  server.on("/download", HTTP_GET, handleDownload);
+  server.on("/clearlog", HTTP_GET, handleClearLog);
+  server.begin();
+}
+\end{minted}
 
 \section{Performance and Safety Features}
 The implementation includes several key features for reliable operation:
@@ -970,294 +1431,64 @@ The implementation includes several key features for reliable operation:
 \begin{itemize}
     \item 50Hz servo update rate for smooth motion
     \item Averaged current readings for improved accuracy
-    \item Automatic file system management to prevent memory overflow
-    \item Parameter constraints for stable operation
+    \item Parameter constraints for stable operation:
+    \begin{minted}[frame=single, linenos,breaklines, breakanywhere, fontsize=\footnotesize]{c++}
+    amplitude = constrain(server.arg("amplitude").toFloat(), 10.0, 45.0);
+    frequency = constrain(server.arg("frequency").toFloat(), 0.1, 2.0);
+    phaseOffset = constrain(server.arg("phase").toFloat(), 30.0, 90.0);
+    \end{minted}
     \item Emergency stop functionality
     \item Non-blocking operations for responsive control
     \item Servo testing and calibration capabilities
+    \item Time-limited logging intervals (10 seconds at 10Hz)
+    \item Ability to log idle state current consumption
 \end{itemize}
 
-\section{System Initialization}
-The initialization process ensures proper setup of all components:
+\section{Main Control Loop}
+The main loop coordinates all system functions:
 
-\begin{lstlisting}[language=C++]
-void setup() {
-    Serial.begin(115200);
-    pinMode(analogPin, INPUT);
-    analogReadResolution(12);
-    
-    if(!SPIFFS.begin(true)) {
-        Serial.println("SPIFFS mount failed");
-        return;
+\begin{minted}[frame=single, linenos,breaklines, breakanywhere, fontsize=\footnotesize]{c++}
+void loop() {
+  server.handleClient();
+  
+  // Handle servo operations
+  if (testingActive) {
+    handleServoTest();
+  }
+  else if (locomotionEnabled && (millis() - lastUpdate >= interval)) {
+    if (movementMode == 0) {
+      updateServosLateralUndulation();
+    } else {
+      updateServosSidewinding();
     }
-    
-    for (int i = 0; i < NUM_SERVOS; i++) {
-        servos[i].attach(servoPins[i]);
-        servos[i].write(centerPosition);
+    lastUpdate = millis();
+  }
+  
+  // Handle logging at fixed intervals
+  if (loggingEnabled) {
+    // Check if logging duration has exä bv.f-6pired
+    if (millis() - loggingStartTime >= LOGGING_DURATION) {
+      loggingEnabled = false;
+    } 
+    // Log at fixed intervals
+    else if (millis() - lastLogTime >= LOGGING_INTERVAL) {
+      // Take a current reading
+      float current = 0.0;
+      for(int i = 0; i < 5; i++) {
+        current += abs(sensor.mA_DC());
+      }
+      current = (current / 5.0) / 1000.0;  // Convert to Amps
+      
+      logCurrentData(current);
+      lastLogTime = millis();
     }
-    
-    WiFi.softAP("ESP32_Snake", "12345678");
-    
-    server.on("/", HTTP_GET, handleRoot);
-    server.on("/", HTTP_POST, handleSetParameters);
-    server.on("/current", HTTP_GET, handleCurrentData);
-    server.on("/download", HTTP_GET, handleDownload);
-    server.begin();
+  }
 }
-\end{lstlisting}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-\chapter{Test Data}
-\section{Performance Testing Protocol}
-\subsection{Motion Pattern Analysis}
-\begin{enumerate}
-\item \textbf{Linear Locomotion Tests}
-\begin{itemize}
-\item Course setup: 3-meter straight line with 10cm width markers
-\item Starting position: Robot centered at start line
-\item Test conditions:
-\begin{itemize}
-\item Amplitude variations: 20°, 30°, 40°
-\item Frequency variations: 0.5Hz, 1.0Hz, 1.5Hz
-\item Phase offset variations: 45°, 60°, 75°
-\end{itemize}
-\item Measurements:
-\begin{itemize}
-\item Time to complete course
-\item Maximum lateral deviation
-\item Power consumption
-\item Servo temperature rise
-\end{itemize}
-\end{itemize}
-\item \textbf{Turning Capability Tests}
-\begin{itemize}
-    \item Setup: 2-meter diameter circular test area
-    \item Measurements:
-    \begin{itemize}
-        \item Minimum turning radius
-        \item Time for 360° rotation
-        \item Angular velocity
-        \item Power consumption during turn
-    \end{itemize}
-    \item Variables:
-    \begin{itemize}
-        \item Different turn angles (45°, 90°, 180°)
-        \item Various motion parameters
-        \item Different surface types
-    \end{itemize}
-\end{itemize}
-\end{enumerate}
-\section{Environmental Testing}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Surface Type} & \textbf{Friction Coef.} & \textbf{Speed (m/s)} & \textbf{Success Rate} \\
-\hline
-Smooth Tile & 0.3 & 0.15 & 95\% \\
-Carpet & 0.6 & 0.08 & 85\% \\
-Rubber Mat & 0.8 & 0.12 & 90\% \\
-Concrete & 0.7 & 0.10 & 80\% \\
-\hline
-\end{tabular}
-\caption{Surface Performance Characteristics}
-\end{table}
+\end{minted}
 
-\section{Power Consumption Analysis}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{State} & \textbf{Current (A)} & \textbf{Voltage (V)} & \textbf{Power (W)} & \textbf{Runtime (min)} \\
-\hline
-Idle & 0.2 & 7.4 & 1.48 & 660 \\
-WiFi Only & 0.3 & 7.4 & 2.22 & 440 \\
-Standby & 0.5 & 7.4 & 3.70 & 264 \\
-Walking & 1.8 & 7.2 & 12.96 & 73 \\
-Full Motion & 2.1 & 7.0 & 14.70 & 63 \\
-\hline
-\end{tabular}
-\caption{Power Consumption in Different Operating Modes}
-\end{table}
-\section{WiFi Performance Metrics}
-\begin{itemize}
-\item Signal strength vs. distance measurements
-\item Latency measurements at various distances
-\item Packet loss analysis
-\item Interface response times
-\item Connection stability tests
-\end{itemize}
-\section{Detailed Test Results}
-
-
-\subsection{Control Response Testing}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Command} & \textbf{Response Time (ms)} & \textbf{Accuracy (\%)} & \textbf{Jitter (ms)} \\
-\hline
-Start Motion & 45 & 98 & $\pm$5 \\
-Stop Motion & 38 & 99 & $\pm$3 \\
-Change Direction & 52 & 95 & $\pm$7 \\
-Parameter Update & 41 & 97 & $\pm$4 \\
-\hline
-\end{tabular}
-\caption{Control System Response Metrics}
-\end{table}
-
-\subsection{Motion Pattern Analysis}
-\begin{itemize}
-\item \textbf{Lateral Undulation Tests}
-\begin{table}[h]
-\centering
-\begin{tabular}{|c|c|c|c|c|}
-\hline
-\textbf{Amplitude ($^{\circ}$)} & \textbf{Frequency (Hz)} & \textbf{Speed (m/s)} & \textbf{Efficiency*} & \textbf{Stability**} \\
-\hline
-20 & 0.5 & 0.08 & 75\% & 90\% \\
-30 & 1.0 & 0.12 & 85\% & 85\% \\
-40 & 1.5 & 0.15 & 80\% & 75\% \\
-\hline
-\end{tabular}
-\caption{Lateral Undulation Performance Data}
-\end{table}
-\small{* Efficiency = Distance traveled / Power consumed} \\
-\small{** Stability = Percentage of straight line maintained}
-\end{itemize}
-\subsection{Temperature Monitoring}
-\begin{figure}[h]
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Component} & \textbf{Idle (°C)} & \textbf{Normal Load (°C)} & \textbf{Max Load (°C)} \
-\hline
-ESP32 & 35 & 45 & 55 \
-Servos (avg) & 30 & 50 & 65 \
-Battery & 25 & 35 & 45 \
-\hline
-\end{tabular}
-\caption{Temperature Measurements During Operation}
-\end{figure}
-\section{Long-Duration Testing}
-\subsection{Endurance Test Results}
-\begin{itemize}
-\item \textbf{Continuous Operation Test (2 hours)}
-\begin{itemize}
-\item Initial battery voltage: 8.4V
-\item Final battery voltage: 6.8V
-\item Distance covered: 432 meters
-\item Average speed: 0.06 m/s
-\item Temperature rise: 28°C
-\item Servo performance degradation: 5%
-\end{itemize}
-\item \textbf{Intermittent Operation Test (4 hours)}
-\begin{itemize}
-    \item Cycle: 5 minutes operation, 1 minute rest
-    \item Total active time: 200 minutes
-    \item Total distance: 960 meters
-    \item Average speed: 0.08 m/s
-    \item Temperature stability: ±5°C
-    \item No significant performance degradation
-\end{itemize}
-\end{itemize}
-\section{CPG Parameter Optimization Results}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Parameter Set} & \textbf{Speed (m/s)} & \textbf{Energy Cost*} & \textbf{Stability Score**} \
-\hline
-Basic & 0.08 & 1.0 & 7.5 \
-Optimized 1 & 0.12 & 0.85 & 8.2 \
-Optimized 2 & 0.15 & 0.75 & 8.8 \
-Final & 0.18 & 0.70 & 9.1 \
-\hline
-\end{tabular}
-\caption{CPG Optimization Results}
-\end{table}
-\small{* Normalized energy cost per meter} \
-\small{** Scale of 1-10, based on motion smoothness and precision}
-\section{Failure Mode Analysis}
-\begin{itemize}
-\item \textbf{Common Failure Modes}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|l|}
-\hline
-\textbf{Issue} & \textbf{Frequency} & \textbf{Impact} & \textbf{Resolution} \
-\hline
-WiFi Dropout & 5% & Low & Auto-reconnect \
-Servo Stall & 2% & High & Current limiting \
-Battery Low & 8% & Medium & Voltage monitoring \
-Overheating & 3% & High & Thermal protection \
-\hline
-\end{tabular}
-\caption{System Failure Analysis}
-\end{table}
-\end{itemize}
-\section{Environmental Impact Testing}
-\subsection{Surface Testing Matrix}
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
-\hline
-\textbf{Surface} & \textbf{Grip} & \textbf{Wear} & \textbf{Speed} & \textbf{Power} \
-\hline
-Smooth Tile & Low & Low & High & Low \
-Carpet & High & Medium & Medium & High \
-Rubber & High & Low & Medium & Medium \
-Concrete & Medium & High & Low & High \
-\hline
-\end{tabular}
-\caption{Surface Performance Matrix}
-\end{table}
-\section{Test Equipment Used}
-\begin{itemize}
-\item Fluke 87V Digital Multimeter
-\item USB Power Meter YZXStudio ZY1276
-\item FLIR ONE Pro Thermal Camera
-\item GoPro Hero 9 for motion capture
-\item Custom Arduino-based data logger
-\item Digital Scale (0.1g precision)
-\item WiFi Analyzer App
-\item Infrared Thermometer
-\end{itemize}
-\section{Future Test Recommendations}
-\begin{itemize}
-\item Advanced motion capture analysis
-\item Stress testing under varied loads
-\item Extended battery life optimization
-\item Alternative surface materials testing
-\item EMI interference testing
-\item Water resistance testing
-\item Impact resistance testing
-\end{itemize}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%\chapter{Hardware Specifications}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%\chapter{Software Documentation}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%\chapter{Test Data}
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
-%//////////////////////////////////////
+\cleardoublepage
+\section*{Code Availability}
+The software, CAD models, and further materials used and developed in this work can be found at the GitHub repository: \url{https://github.com/AmrEslim/snake_robot}.
 
 % Bibliography
 \printbibliography
