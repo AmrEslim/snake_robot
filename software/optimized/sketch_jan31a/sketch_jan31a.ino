@@ -7,37 +7,37 @@ WebServer server(80);
 
 // Servo configuration
 const int NUM_SERVOS = 10;
-const int NUM_HORIZONTAL = 7;  // Number of horizontal servos
-const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; // 1=horizontal, 0=vertical
+const int NUM_HORIZONTAL = 7;
+const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1};
 const int servoPins[NUM_SERVOS] = {23, 22, 2, 4, 16, 17, 5, 18, 19, 21};
 
 // Rattling configuration
-const int tailLiftIdx = 7;   // 8th motor (index 7) - lifts tail up
-const int tailRattle1Idx = 8; // 9th motor (index 8) - first rattle motor
-const int tailRattle2Idx = 9; // 10th motor (index 9) - second rattle motor
+const int tailLiftIdx = 7;
+const int tailRattle1Idx = 8;
+const int tailRattle2Idx = 9;
 
 bool rattlingActive = false;
 unsigned long rattlingStart = 0;
-const unsigned long RATTLING_DURATION = 5000; // 5 seconds
-const float RATTLING_FREQ = 30.0; // High frequency for intense rattle
+const unsigned long RATTLING_DURATION = 5000;
+const float RATTLING_FREQ = 30.0;
 const float RATTLING_AMPLITUDE = 45.0;
-const float CURL_AMPLITUDE = 30.0; // For body curling effect
-bool bodyHasCurled = false; // Track if body has done its curl
+const float CURL_AMPLITUDE = 30.0;
+bool bodyHasCurled = false;
 
 Servo servos[NUM_SERVOS];
 
 // Locomotion parameters
 bool locomotionEnabled = false;
 bool forwardDirection = true;
-int movementMode = 0;  // 0: Lateral undulation, 1: Sidewinding
+int movementMode = 0;
 float amplitude = 30.0;
 float frequency = 1.0;
 float phaseOffset = 60.0;
-float verticalAmplitude = 20.0;  // For sidewinding
-float verticalPhaseOffset = 90.0; // 90 degrees offset for sidewinding
+float verticalAmplitude = 20.0;
+float verticalPhaseOffset = 90.0;
 float centerPosition = 90.0;
 unsigned long lastUpdate = 0;
-const int interval = 20;  // 50Hz update rate
+const int interval = 20;
 
 // Servo test variables
 bool testingActive = false;
@@ -45,179 +45,341 @@ int testServoIndex = 0;
 int testPosition = 0;
 unsigned long lastTestMillis = 0;
 
-// HTML Interface - Simplified without logging features
+// HTML with completely rewritten JavaScript
 const char* htmlPage = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Snake Robot Control</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      text-align: center; 
-      padding: 20px; 
-      background-color: #f2f2f2; 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
     }
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
     }
-    h2 { 
-      color: #333; 
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
       margin-bottom: 20px;
     }
-    button, input, select { 
-      font-size: 18px; 
-      padding: 10px; 
-      margin: 8px; 
-      border-radius: 5px; 
-      border: 1px solid #ccc;
-      cursor: pointer; 
-    }
-    button { 
-      background-color: #007BFF; 
-      color: white; 
+    .btn {
+      padding: 15px 20px;
       border: none;
-      min-width: 120px;
-    }
-    button:hover { 
-      background-color: #0056b3; 
-    }
-    button.danger {
-      background-color: #dc3545;
-    }
-    button.success {
-      background-color: #28a745;
-    }
-    button.warning {
-      background-color: #ffc107;
-      color: #212529;
-    }
-    button.rattle {
-      background-color: #6f42c1;
-      color: white;
+      border-radius: 10px;
+      font-size: 1rem;
       font-weight: bold;
-      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
     }
-    button.rattle:hover {
-      background-color: #5a2d91;
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
-    input, select { 
-      width: 120px; 
-      text-align: center;
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-warning { background: #f59e0b; color: white; }
+    .btn-rattle {
+      background: linear-gradient(45deg, #8b5cf6, #a78bfa);
+      color: white;
+      font-size: 1.1rem;
+      animation: glow 2s infinite;
     }
-    .control-group {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: white;
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.8); }
+    }
+    select, input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 1rem;
+      margin-bottom: 10px;
     }
-    .response { 
-      margin-top: 20px; 
-      font-size: 18px; 
-      color: #28a745;
-      padding: 10px;
-      background-color: #f8f9fa;
-      border-radius: 5px;
+    select:focus, input:focus {
+      outline: none;
+      border-color: #3b82f6;
     }
-    label {
-      display: inline-block;
-      width: 100px;
-      text-align: right;
-      margin-right: 10px;
+    .param-group {
+      margin-bottom: 15px;
     }
-    @media (max-width: 600px) {
-      button, input, select {
-        width: 100%;
-        margin: 5px 0;
-      }
-      label {
-        width: 100%;
-        text-align: left;
-      }
+    .param-label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    .status {
+      background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+      border: 2px solid #0ea5e9;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .status-text {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #0369a1;
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      max-width: 300px;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification.error {
+      background: #ef4444;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🐍 Snake Robot Control</h2>
-    
-    <div class="control-group">
-      <select id="mode" onchange="sendMode()" style="width: 200px;">
-        <option value="0">Lateral Undulation</option>
-        <option value="1">Sidewinding</option>
+    <div class="header">
+      <h1>🐍 SNAKE ROBOT CONTROL 🐍</h1>
+      <p>Advanced Locomotion System</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 Movement Mode</div>
+      <select id="modeSelect">
+        <option value="0">🌊 Lateral Undulation</option>
+        <option value="1">🏜️ Sidewinding</option>
       </select>
     </div>
-    
-    <div class="control-group">
-      <button onclick="sendAction('forward')">Forward</button>
-      <button onclick="sendAction('backward')">Backward</button>
-      <button onclick="sendAction('stop')" class="danger">Stop</button>
-      <button onclick="sendAction('center')" class="success">Center All</button>
-      <button onclick="sendAction('test')">Test Servos</button>
-      <button onclick="sendAction('rattle')" class="rattle">🐍 RATTLE TAIL 🐍</button>
+
+    <div class="card">
+      <div class="card-title">🎮 Robot Controls</div>
+      <div class="control-grid">
+        <button class="btn btn-primary" id="forwardBtn">⬆️ Forward</button>
+        <button class="btn btn-primary" id="backwardBtn">⬇️ Backward</button>
+        <button class="btn btn-danger" id="stopBtn">⏹️ Stop</button>
+        <button class="btn btn-success" id="centerBtn">🎯 Center</button>
+        <button class="btn btn-warning" id="testBtn">🔧 Test</button>
+        <button class="btn btn-rattle" id="rattleBtn">🐍 RATTLE ATTACK 🐍</button>
+      </div>
     </div>
 
-    <div class="control-group">
-      <div>
-        <label for="amplitude">Amplitude:</label>
+    <div class="card">
+      <div class="card-title">⚙️ Motion Parameters</div>
+      <div class="param-group">
+        <label class="param-label">📏 Amplitude (10-45°)</label>
         <input type="number" id="amplitude" min="10" max="45" step="1" value="30">
       </div>
-      <div>
-        <label for="frequency">Frequency:</label>
+      <div class="param-group">
+        <label class="param-label">⚡ Frequency (0.1-2.0 Hz)</label>
         <input type="number" id="frequency" min="0.1" max="2.0" step="0.1" value="1.0">
       </div>
-      <div>
-        <label for="phase">Phase:</label>
+      <div class="param-group">
+        <label class="param-label">🌊 Phase Offset (30-90°)</label>
         <input type="number" id="phase" min="30" max="90" step="5" value="60">
       </div>
-      <button onclick="setParameters()">Update Parameters</button>
+      <button class="btn btn-success" id="updateBtn">💾 Update Parameters</button>
     </div>
 
-    <div class="response" id="response"></div>
+    <div class="status">
+      <div class="status-text">🤖 Status: <span id="statusText">Ready</span></div>
+    </div>
   </div>
 
+  <div class="notification" id="notification"></div>
+
   <script>
-    function sendMode() {
-      const mode = document.getElementById('mode').value;
-      sendRequest('mode=' + mode);
+    // Global variables
+    var currentStatus = 'Ready';
+    
+    // DOM elements
+    var statusElement = document.getElementById('statusText');
+    var notificationElement = document.getElementById('notification');
+    var modeSelect = document.getElementById('modeSelect');
+    var amplitudeInput = document.getElementById('amplitude');
+    var frequencyInput = document.getElementById('frequency');
+    var phaseInput = document.getElementById('phase');
+    
+    // Status update function
+    function updateStatus(status) {
+      currentStatus = status;
+      if (statusElement) {
+        statusElement.textContent = status;
+      }
+      console.log('Status: ' + status);
     }
-
-    function sendAction(action) {
-      sendRequest('action=' + action);
+    
+    // Notification function
+    function showNotification(message, isError) {
+      if (!notificationElement) return;
+      
+      notificationElement.textContent = message;
+      notificationElement.className = 'notification show' + (isError ? ' error' : '');
+      
+      setTimeout(function() {
+        notificationElement.classList.remove('show');
+      }, 4000);
     }
-
-    function setParameters() {
-      const params = new URLSearchParams();
-      params.append('amplitude', document.getElementById('amplitude').value);
-      params.append('frequency', document.getElementById('frequency').value);
-      params.append('phase', document.getElementById('phase').value);
-      sendRequest(params.toString());
+    
+    // HTTP request function
+    function makeRequest(data) {
+      console.log('Making request: ' + data);
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            console.log('Response: ' + xhr.responseText);
+            showNotification(xhr.responseText, false);
+          } else {
+            console.error('Request failed: ' + xhr.status);
+            showNotification('Error: Request failed', true);
+          }
+        }
+      };
+      
+      xhr.onerror = function() {
+        console.error('Network error');
+        showNotification('Network error', true);
+      };
+      
+      xhr.send(data);
     }
-
-    function sendRequest(data) {
-      fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data
-      })
-      .then(response => response.text())
-      .then(data => {
-        document.getElementById('response').innerHTML = data;
-        setTimeout(() => document.getElementById('response').innerHTML = '', 3000);
-      })
-      .catch(error => {
-        document.getElementById('response').innerHTML = 'Error: ' + error;
-      });
+    
+    // Action functions
+    function executeAction(action) {
+      console.log('Action: ' + action);
+      
+      var statusMap = {
+        'forward': '⬆️ Moving Forward',
+        'backward': '⬇️ Moving Backward',
+        'stop': '⏹️ Stopped',
+        'center': '🎯 Centering',
+        'test': '🔧 Testing',
+        'rattle': '🐍 RATTLING! 🐍'
+      };
+      
+      updateStatus(statusMap[action] || 'Processing...');
+      makeRequest('action=' + action);
+      
+      // Special effect for rattle
+      if (action === 'rattle') {
+        document.body.style.animation = 'shake 0.5s infinite';
+        setTimeout(function() {
+          document.body.style.animation = '';
+        }, 5000);
+      }
     }
+    
+    function changeMode() {
+      var mode = modeSelect ? modeSelect.value : '0';
+      var modeName = mode === '0' ? '🌊 Lateral Undulation' : '🏜️ Sidewinding';
+      updateStatus('Mode: ' + modeName);
+      makeRequest('mode=' + mode);
+    }
+    
+    function updateParameters() {
+      var amp = amplitudeInput ? amplitudeInput.value : '30';
+      var freq = frequencyInput ? frequencyInput.value : '1.0';
+      var phase = phaseInput ? phaseInput.value : '60';
+      
+      updateStatus('⚙️ Updating Parameters');
+      makeRequest('amplitude=' + amp + '&frequency=' + freq + '&phase=' + phase);
+    }
+    
+    // Event listeners setup
+    function setupEventListeners() {
+      // Button event listeners
+      var forwardBtn = document.getElementById('forwardBtn');
+      var backwardBtn = document.getElementById('backwardBtn');
+      var stopBtn = document.getElementById('stopBtn');
+      var centerBtn = document.getElementById('centerBtn');
+      var testBtn = document.getElementById('testBtn');
+      var rattleBtn = document.getElementById('rattleBtn');
+      var updateBtn = document.getElementById('updateBtn');
+      
+      if (forwardBtn) forwardBtn.addEventListener('click', function() { executeAction('forward'); });
+      if (backwardBtn) backwardBtn.addEventListener('click', function() { executeAction('backward'); });
+      if (stopBtn) stopBtn.addEventListener('click', function() { executeAction('stop'); });
+      if (centerBtn) centerBtn.addEventListener('click', function() { executeAction('center'); });
+      if (testBtn) testBtn.addEventListener('click', function() { executeAction('test'); });
+      if (rattleBtn) rattleBtn.addEventListener('click', function() { executeAction('rattle'); });
+      if (updateBtn) updateBtn.addEventListener('click', updateParameters);
+      if (modeSelect) modeSelect.addEventListener('change', changeMode);
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Page loaded - initializing...');
+      setupEventListeners();
+      updateStatus('🤖 Ready for Commands');
+      
+      // Test connection
+      setTimeout(function() {
+        makeRequest('test=connection');
+      }, 1000);
+    });
+    
+    // Add shake animation
+    var shakeStyle = document.createElement('style');
+    shakeStyle.textContent = '@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); } 20%, 40%, 60%, 80% { transform: translateX(2px); } }';
+    document.head.appendChild(shakeStyle);
   </script>
 </body>
 </html>
 )rawliteral";
 
 void handleRoot() {
+  Serial.println(">> Serving main page...");
   server.send(200, "text/html", htmlPage);
 }
 
@@ -226,8 +388,8 @@ void rattleTail() {
   rattlingStart = millis();
   locomotionEnabled = false;
   testingActive = false;
-  bodyHasCurled = false; // Reset curl state
-  Serial.println("🐍 Rattling activated!");
+  bodyHasCurled = false;
+  Serial.println("*** RATTLE ATTACK ACTIVATED! ***");
 }
 
 void updateTailRattle() {
@@ -237,48 +399,42 @@ void updateTailRattle() {
   if (elapsed > RATTLING_DURATION) {
     rattlingActive = false;
     bodyHasCurled = false;
-    // Return all servos to center positions
     for (int i = 0; i < NUM_SERVOS; i++) {
       servos[i].write(centerPosition);
     }
-    Serial.println("Rattle sequence complete - all servos centered");
+    Serial.println("*** Rattle complete ***");
     return;
   }
   
   float t = elapsed / 1000.0f;
   
-  // Body curl once at the beginning and stay static
-  if (!bodyHasCurled && elapsed < 800) { // Curl for first 0.8 seconds
-    for (int i = 0; i < 5; i++) { // First 5 servos
-      if (servoLayout[i] == 1) { // Only horizontal servos
-        float curlProgress = elapsed / 800.0f; // 0 to 1 over 0.8 seconds
-        float curlAngle = centerPosition + CURL_AMPLITUDE * sin(curlProgress * PI) * 0.8; // Smooth curl
+  if (!bodyHasCurled && elapsed < 800) {
+    for (int i = 0; i < 5; i++) {
+      if (servoLayout[i] == 1) {
+        float curlProgress = elapsed / 800.0f;
+        float curlAngle = centerPosition + CURL_AMPLITUDE * sin(curlProgress * PI) * 0.8;
         servos[i].write(curlAngle);
       }
     }
   } else if (elapsed >= 800 && !bodyHasCurled) {
-    // Fix body in curled position
     bodyHasCurled = true;
     for (int i = 0; i < 5; i++) {
       if (servoLayout[i] == 1) {
-        float finalCurlAngle = centerPosition + CURL_AMPLITUDE * 0.6; // Static curl position
+        float finalCurlAngle = centerPosition + CURL_AMPLITUDE * 0.6;
         servos[i].write(finalCurlAngle);
       }
     }
-    Serial.println("Body curled and locked in position");
+    Serial.println("*** Body curled - tail rattling ***");
   }
   
-  // Tail operations - continuous throughout the duration
-  // Lift tail up (8th motor - index 7)
-  float liftAngle = centerPosition - 45; // Lift tail up higher
+  float liftAngle = centerPosition - 45;
   servos[tailLiftIdx].write(liftAngle);
   
-  // Intense alternating rattle pattern for 9th and 10th motors
-  float highFreqRattle1 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t);
-  float highFreqRattle2 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t + PI); // 180° out of phase
+  float rattle1 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t);
+  float rattle2 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t + PI);
   
-  servos[tailRattle1Idx].write(highFreqRattle1);
-  servos[tailRattle2Idx].write(highFreqRattle2);
+  servos[tailRattle1Idx].write(rattle1);
+  servos[tailRattle2Idx].write(rattle2);
 }
 
 void centerAllServos() {
@@ -286,12 +442,12 @@ void centerAllServos() {
   testingActive = false;
   rattlingActive = false;
   bodyHasCurled = false;
-  Serial.println("Centering all servos...");
+  Serial.println(">> Centering all servos...");
   
   for (int i = 0; i < NUM_SERVOS; i++) {
     servos[i].write(centerPosition);
   }
-  Serial.println("All servos centered");
+  Serial.println(">> All servos centered!");
 }
 
 void handleServoTest() {
@@ -299,18 +455,10 @@ void handleServoTest() {
     lastTestMillis = millis();
     
     switch (testPosition) {
-      case 0:
-        servos[testServoIndex].write(0);
-        break;
-      case 1:
-        servos[testServoIndex].write(90);
-        break;
-      case 2:
-        servos[testServoIndex].write(180);
-        break;
-      case 3:
-        servos[testServoIndex].write(90);
-        break;
+      case 0: servos[testServoIndex].write(0); break;
+      case 1: servos[testServoIndex].write(90); break;
+      case 2: servos[testServoIndex].write(180); break;
+      case 3: servos[testServoIndex].write(90); break;
     }
 
     if (++testPosition > 3) {
@@ -319,6 +467,7 @@ void handleServoTest() {
         testingActive = false;
         testServoIndex = 0;
         centerAllServos();
+        Serial.println(">> Test complete");
       }
     }
   }
@@ -329,19 +478,15 @@ void updateServosLateralUndulation() {
   int horizontalIndex = 0;
   
   for (int i = 0; i < NUM_SERVOS; i++) {
-    if (servoLayout[i] == 1) {  // Horizontal servos
-      float segmentPhase;
-      
-      if (forwardDirection) {
-        segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset);
-      } else {
-        segmentPhase = horizontalIndex * radians(phaseOffset);
-      }
+    if (servoLayout[i] == 1) {
+      float segmentPhase = forwardDirection ? 
+        (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset) :
+        horizontalIndex * radians(phaseOffset);
       
       float angle = centerPosition + amplitude * sin(timeScale + segmentPhase);
       servos[i].write(angle);
       horizontalIndex++;
-    } else {  // Vertical servos remain centered
+    } else {
       servos[i].write(centerPosition);
     }
   }
@@ -353,7 +498,7 @@ void updateServosSidewinding() {
   int verticalIndex = 0;
 
   for (int i = 0; i < NUM_SERVOS; i++) {
-    if (servoLayout[i] == 1) {  // Horizontal servos
+    if (servoLayout[i] == 1) {
       float phase = forwardDirection ? 
         radians((NUM_HORIZONTAL - 1 - horizontalIndex) * phaseOffset) : 
         radians(horizontalIndex * phaseOffset);
@@ -361,7 +506,7 @@ void updateServosSidewinding() {
       float angle = centerPosition + amplitude * sin(timeScale + phase);
       servos[i].write(angle);
       horizontalIndex++;
-    } else {  // Vertical servos
+    } else {
       float basePhase = verticalIndex * phaseOffset + verticalPhaseOffset;
       float phase = forwardDirection ? 
         radians((NUM_SERVOS - NUM_HORIZONTAL - 1 - verticalIndex) * phaseOffset + verticalPhaseOffset) : 
@@ -375,95 +520,120 @@ void updateServosSidewinding() {
 }
 
 void handleSetParameters() {
-  String response;
+  String response = "";
+  
+  Serial.println("=== POST Request ===");
+  for (int i = 0; i < server.args(); i++) {
+    Serial.println(server.argName(i) + " = " + server.arg(i));
+  }
+  
+  if (server.hasArg("test")) {
+    response = "🤖 Connection OK!";
+    Serial.println(">> Connection test");
+  }
   
   if (server.hasArg("mode")) {
     movementMode = server.arg("mode").toInt();
-    response = "Mode set to: " + String(movementMode == 0 ? "Lateral Undulation" : "Sidewinding");
+    response = "🎯 Mode: " + String(movementMode == 0 ? "Lateral" : "Sidewinding");
+    Serial.println(">> Mode: " + String(movementMode));
   }
   
   if (server.hasArg("action")) {
     String action = server.arg("action");
+    Serial.println(">> Action: " + action);
+    
     if (action == "center") {
       centerAllServos();
-      response = "All servos centered";
+      response = "🎯 Centered!";
     } else if (action == "forward") {
       locomotionEnabled = true;
       forwardDirection = true;
       rattlingActive = false;
-      response = "Forward motion enabled";
-    } else if (action == "rattle") {
-      rattleTail();
-      response = "🐍 RATTLING INITIATED! Body will curl once, tail will rattle intensely for 5 seconds! 🐍";
+      response = "⬆️ Forward!";
     } else if (action == "backward") {
       locomotionEnabled = true;
       forwardDirection = false;
       rattlingActive = false;
-      response = "Backward motion enabled";
+      response = "⬇️ Backward!";
     } else if (action == "stop") {
       locomotionEnabled = false;
       rattlingActive = false;
       centerAllServos();
-      response = "Stopped and centered";
+      response = "⏹️ Stopped!";
     } else if (action == "test") {
       testingActive = true;
       rattlingActive = false;
       testServoIndex = 0;
       testPosition = 0;
-      response = "Starting servo test...";
+      response = "🔧 Testing!";
+    } else if (action == "rattle") {
+      rattleTail();
+      response = "🐍 RATTLE ATTACK! 🐍";
     }
   }
 
   if (server.hasArg("amplitude")) {
     amplitude = constrain(server.arg("amplitude").toFloat(), 10.0, 45.0);
-    response += " Amplitude: " + String(amplitude);
+    response += " Amp:" + String(amplitude);
   }
   if (server.hasArg("frequency")) {
     frequency = constrain(server.arg("frequency").toFloat(), 0.1, 2.0);
-    response += " Frequency: " + String(frequency);
+    response += " Freq:" + String(frequency);
   }
   if (server.hasArg("phase")) {
     phaseOffset = constrain(server.arg("phase").toFloat(), 30.0, 90.0);
-    response += " Phase: " + String(phaseOffset);
+    response += " Phase:" + String(phaseOffset);
   }
   
+  if (response == "") response = "❓ Unknown";
+  
+  Serial.println(">> Response: " + response);
+  
+  server.sendHeader("Access-Control-Allow-Origin", "*");
   server.send(200, "text/plain", response);
 }
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
   
-  // Initialize all servos
+  Serial.println("🐍 SNAKE ROBOT STARTING 🐍");
+  
+  // Initialize servos
   for (int i = 0; i < NUM_SERVOS; i++) {
     servos[i].attach(servoPins[i]);
     servos[i].write(centerPosition);
+    Serial.printf("Servo %d: Pin %d\n", i+1, servoPins[i]);
   }
 
-  // Setup WiFi Access Point
+  // Start WiFi AP
+  WiFi.mode(WIFI_AP);
   WiFi.softAP("ESP32_Snake", "12345678");
-  Serial.println("🐍 Snake Robot Access Point Started");
-  Serial.print("IP Address: ");
-  Serial.println(WiFi.softAPIP());
+  delay(2000);
+  
+  IPAddress IP = WiFi.softAPIP();
+  Serial.println("WiFi AP Started!");
+  Serial.print("IP: ");
+  Serial.println(IP);
+  Serial.println("Network: ESP32_Snake");
+  Serial.println("Password: 12345678");
 
-  // Setup server handlers
+  // Start server
   server.on("/", HTTP_GET, handleRoot);
   server.on("/", HTTP_POST, handleSetParameters);
   server.begin();
-  Serial.println("HTTP server started - Ready to rattle! 🐍");
+  Serial.println("Server started!");
+  Serial.println("🤖 READY! 🤖");
 }
 
 void loop() {
   server.handleClient();
   
-  // Handle rattling with highest priority
   if (rattlingActive) {
     updateTailRattle();
-  }
-  // Handle servo operations only if not rattling
-  else if (testingActive) {
+  } else if (testingActive) {
     handleServoTest();
-  }
-  else if (locomotionEnabled && (millis() - lastUpdate >= interval)) {
+  } else if (locomotionEnabled && (millis() - lastUpdate >= interval)) {
     if (movementMode == 0) {
       updateServosLateralUndulation();
     } else {
