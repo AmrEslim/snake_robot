@@ -1,13 +1,13 @@
 # snake_robot
-# 🐍 Bio-Inspired Snake Robot: Development and Control Strategies
+# 🐍 Neurobiologically inspired control of a robot: Development and Control Strategies
 
-This repository contains the development, design, and control strategies for a **bio-inspired snake robot**, built as a Bachelor's thesis. The project focuses on **mechanical design, motion control, and CPG-based locomotion strategies**.
+This repository contains the development, design, and control strategies for a **Neurobiologically inspired control of a robot**, built as a Bachelor's thesis. The project focuses on **mechanical design, motion control, and CPG-based locomotion strategies**.
 
 ## 📖 Overview
 The project explores:
 - 🦴 **Hardware Design**: Modular snake-like body segments, 3D-printed joints.
 - 🧠 **Control Strategies**: Central Pattern Generators (CPGs), Reinforcement Learning.
-- 🎮 **Tests**: Python-based physics simulations.
+- 🎮 **Tests**: with Kinovea motion tracking.
 - 🔬 **Experiments & Results**: Performance analysis, real-world testing.
 
 ## 📂 Repository Structure
