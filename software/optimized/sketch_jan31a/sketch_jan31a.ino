@@ -2,17 +2,27 @@
 #include <WebServer.h>
 #include <ESP32Servo.h>
 #include <math.h>
-#include <ACS712.h>
-#include <SPIFFS.h>
 
 WebServer server(80);
 
 // Servo configuration
-const int analogPin = 34;
 const int NUM_SERVOS = 10;
 const int NUM_HORIZONTAL = 7;  // Number of horizontal servos
 const int servoLayout[NUM_SERVOS] = {1, 0, 1, 1, 0, 1, 1, 0, 1, 1}; // 1=horizontal, 0=vertical
 const int servoPins[NUM_SERVOS] = {23, 22, 2, 4, 16, 17, 5, 18, 19, 21};
+
+// Rattling configuration
+const int tailLiftIdx = 7;   // 8th motor (index 7) - lifts tail up
+const int tailRattle1Idx = 8; // 9th motor (index 8) - first rattle motor
+const int tailRattle2Idx = 9; // 10th motor (index 9) - second rattle motor
+
+bool rattlingActive = false;
+unsigned long rattlingStart = 0;
+const unsigned long RATTLING_DURATION = 5000; // 5 seconds
+const float RATTLING_FREQ = 30.0; // High frequency for intense rattle
+const float RATTLING_AMPLITUDE = 45.0;
+const float CURL_AMPLITUDE = 30.0; // For body curling effect
+bool bodyHasCurled = false; // Track if body has done its curl
 
 Servo servos[NUM_SERVOS];
 
@@ -35,20 +45,7 @@ int testServoIndex = 0;
 int testPosition = 0;
 unsigned long lastTestMillis = 0;
 
-// Logging variables
-bool loggingEnabled = false;
-unsigned long loggingStartTime = 0;
-unsigned long lastLogTime = 0;
-const unsigned long LOGGING_DURATION = 10000; // 10 seconds in milliseconds
-const unsigned long LOGGING_INTERVAL = 100; // Log every 100ms (10Hz)
-
-//initialize the sensor
-ACS712 sensor(analogPin, 3.3, 4095, 100.0); // pin, voltage, ADC max, mV/A sensitivity
-
-// File for logging data
-File logFile;
-
-// HTML Interface
+// HTML Interface - Simplified without logging features
 const char* htmlPage = R"rawliteral(
 <!DOCTYPE html>
 <html>
@@ -97,6 +94,15 @@ const char* htmlPage = R"rawliteral(
       background-color: #ffc107;
       color: #212529;
     }
+    button.rattle {
+      background-color: #6f42c1;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    button.rattle:hover {
+      background-color: #5a2d91;
+    }
     input, select { 
       width: 120px; 
       text-align: center;
@@ -136,7 +142,7 @@ const char* htmlPage = R"rawliteral(
 </head>
 <body>
   <div class="container">
-    <h2>Snake Robot Control</h2>
+    <h2>🐍 Snake Robot Control</h2>
     
     <div class="control-group">
       <select id="mode" onchange="sendMode()" style="width: 200px;">
@@ -144,22 +150,14 @@ const char* htmlPage = R"rawliteral(
         <option value="1">Sidewinding</option>
       </select>
     </div>
-    <div class="control-group">
-      <h3>Current Sensor Data</h3>
-      <p>Current Reading: <span id="currentReading">0.00</span> A</p>
-      <p>Logging Status: <span id="loggingStatus">Inactive</span></p>
-      <div style="display: flex; justify-content: center; gap: 10px;">
-        <button onclick="downloadData()">Download Data</button>
-        <button onclick="clearLogData()" class="danger">Clear Log</button>
-        <button onclick="sendAction('logIdle')" class="warning">Log Idle (10s)</button>
-      </div>
-    </div>
+    
     <div class="control-group">
       <button onclick="sendAction('forward')">Forward</button>
       <button onclick="sendAction('backward')">Backward</button>
       <button onclick="sendAction('stop')" class="danger">Stop</button>
       <button onclick="sendAction('center')" class="success">Center All</button>
       <button onclick="sendAction('test')">Test Servos</button>
+      <button onclick="sendAction('rattle')" class="rattle">🐍 RATTLE TAIL 🐍</button>
     </div>
 
     <div class="control-group">
@@ -214,38 +212,6 @@ const char* htmlPage = R"rawliteral(
         document.getElementById('response').innerHTML = 'Error: ' + error;
       });
     }
-    function fetchCurrentData() {
-      fetch('/current')
-        .then(response => response.json())
-        .then(data => {
-          document.getElementById('currentReading').innerText = data.current.toFixed(2);
-          document.getElementById('loggingStatus').innerText = data.logging ? 'Active' : 'Inactive';
-        })
-        .catch(error => console.error('Error fetching current data:', error));
-    }
-
-    // Function to download data
-    function downloadData() {
-      window.location.href = '/download';
-    }
-    
-    // Function to clear log data
-    function clearLogData() {
-      if (confirm('Are you sure you want to clear all logged data?')) {
-        fetch('/clearlog')
-          .then(response => response.text())
-          .then(data => {
-            document.getElementById('response').innerHTML = data;
-            setTimeout(() => document.getElementById('response').innerHTML = '', 3000);
-          })
-          .catch(error => {
-            document.getElementById('response').innerHTML = 'Error: ' + error;
-          });
-      }
-    }
-
-    // Periodically fetch current data every 30 milli seconds
-    setInterval(fetchCurrentData, 30);
   </script>
 </body>
 </html>
@@ -255,124 +221,77 @@ void handleRoot() {
   server.send(200, "text/html", htmlPage);
 }
 
-void logCurrentData(float current) {
-  if (!loggingEnabled) return;
-  
-  File file = SPIFFS.open("/current_log.txt", FILE_APPEND);
-  if(!file) {
-    Serial.println("Failed to open file for appending");
-    return;
-  }
-  
-  // Calculate time in seconds since logging started (with millisecond precision)
-  float elapsedTime = (millis() - loggingStartTime) / 1000.0;
-  
-  // Write data in CSV format: "seconds,current"
-  file.printf("%.3f,%.3f\n", elapsedTime, current);
-  file.close();
+void rattleTail() {
+  rattlingActive = true;
+  rattlingStart = millis();
+  locomotionEnabled = false;
+  testingActive = false;
+  bodyHasCurled = false; // Reset curl state
+  Serial.println("🐍 Rattling activated!");
 }
 
-void handleCurrentData() {
-  float current = 0.0;
-  // Take multiple readings for better accuracy
-  for(int i = 0; i < 10; i++) {
-    current += abs(sensor.mA_DC());
-    delay(1);
-  }
-  current = (current / 10.0) / 1000.0;  // Convert to Amps
+void updateTailRattle() {
+  if (!rattlingActive) return;
   
-  String jsonResponse = "{\"current\": " + String(current, 3) + ", \"logging\": " + (loggingEnabled ? "true" : "false") + "}";
-  server.send(200, "application/json", jsonResponse);
-  
-  // Only print to serial occasionally to avoid slowing things down
-  static unsigned long lastPrintTime = 0;
-  if (millis() - lastPrintTime > 500) { // Print every 500ms
-    Serial.print("Current reading: ");
-    Serial.println(current, 3);
-    if (loggingEnabled) {
-      Serial.print("Logging: ");
-      Serial.print((millis() - loggingStartTime) / 1000.0);
-      Serial.println(" seconds elapsed");
+  unsigned long elapsed = millis() - rattlingStart;
+  if (elapsed > RATTLING_DURATION) {
+    rattlingActive = false;
+    bodyHasCurled = false;
+    // Return all servos to center positions
+    for (int i = 0; i < NUM_SERVOS; i++) {
+      servos[i].write(centerPosition);
     }
-    lastPrintTime = millis();
-  }
-}
-
-void handleDownload() {
-  if(!SPIFFS.exists("/current_log.txt")) {
-    server.send(404, "text/plain", "No data log found");
+    Serial.println("Rattle sequence complete - all servos centered");
     return;
   }
-
-  File file = SPIFFS.open("/current_log.txt", "r");
-  if(!file) {
-    server.send(500, "text/plain", "Failed to open file");
-    return;
-  }
-
-  // Set up headers for file download
-  server.sendHeader("Content-Type", "text/csv");
-  server.sendHeader("Content-Disposition", "attachment; filename=current_log.csv");
-  server.sendHeader("Connection", "close");
   
-  // Add CSV header row for better readability
-  String csvHeader = "Time(s),Current(A)\r\n";
-  server.client().write((const uint8_t*)csvHeader.c_str(), csvHeader.length());
+  float t = elapsed / 1000.0f;
   
-  // Stream file to client
-  size_t fileSize = file.size();
-  server.setContentLength(fileSize + csvHeader.length());
-  
-  // Send file in chunks
-  size_t chunkSize = 1024;
-  uint8_t buf[1024];
-  while(file.available()) {
-    size_t len = file.read(buf, chunkSize);
-    server.client().write(buf, len);
-  }
-  
-  file.close();
-}
-
-// Handle clearing the log file
-void handleClearLog() {
-  if(SPIFFS.exists("/current_log.txt")) {
-    if(SPIFFS.remove("/current_log.txt")) {
-      server.send(200, "text/plain", "Log file cleared successfully");
-      Serial.println("Log file cleared by user request");
-    } else {
-      server.send(500, "text/plain", "Failed to clear log file");
-      Serial.println("Failed to clear log file");
+  // Body curl once at the beginning and stay static
+  if (!bodyHasCurled && elapsed < 800) { // Curl for first 0.8 seconds
+    for (int i = 0; i < 5; i++) { // First 5 servos
+      if (servoLayout[i] == 1) { // Only horizontal servos
+        float curlProgress = elapsed / 800.0f; // 0 to 1 over 0.8 seconds
+        float curlAngle = centerPosition + CURL_AMPLITUDE * sin(curlProgress * PI) * 0.8; // Smooth curl
+        servos[i].write(curlAngle);
+      }
     }
-  } else {
-    server.send(200, "text/plain", "No log file exists");
-    Serial.println("Clear log requested but no file exists");
-  }
-}
-
-void startLogging() {
-  // Clear existing log if it exists
-  if(SPIFFS.exists("/current_log.txt")) {
-    SPIFFS.remove("/current_log.txt");
+  } else if (elapsed >= 800 && !bodyHasCurled) {
+    // Fix body in curled position
+    bodyHasCurled = true;
+    for (int i = 0; i < 5; i++) {
+      if (servoLayout[i] == 1) {
+        float finalCurlAngle = centerPosition + CURL_AMPLITUDE * 0.6; // Static curl position
+        servos[i].write(finalCurlAngle);
+      }
+    }
+    Serial.println("Body curled and locked in position");
   }
   
-  loggingEnabled = true;
-  loggingStartTime = millis();
-  lastLogTime = millis(); // Reset the last log time
-  Serial.println("Logging started for 10 seconds at 10Hz");
+  // Tail operations - continuous throughout the duration
+  // Lift tail up (8th motor - index 7)
+  float liftAngle = centerPosition - 45; // Lift tail up higher
+  servos[tailLiftIdx].write(liftAngle);
+  
+  // Intense alternating rattle pattern for 9th and 10th motors
+  float highFreqRattle1 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t);
+  float highFreqRattle2 = centerPosition + RATTLING_AMPLITUDE * sin(2 * PI * RATTLING_FREQ * t + PI); // 180° out of phase
+  
+  servos[tailRattle1Idx].write(highFreqRattle1);
+  servos[tailRattle2Idx].write(highFreqRattle2);
 }
 
 void centerAllServos() {
   locomotionEnabled = false;
   testingActive = false;
+  rattlingActive = false;
+  bodyHasCurled = false;
   Serial.println("Centering all servos...");
   
   for (int i = 0; i < NUM_SERVOS; i++) {
     servos[i].write(centerPosition);
-    Serial.printf("Servo %d centered to %.1f degrees\n", i, centerPosition);
-    delay(100);
   }
-  delay(500);
+  Serial.println("All servos centered");
 }
 
 void handleServoTest() {
@@ -414,16 +333,12 @@ void updateServosLateralUndulation() {
       float segmentPhase;
       
       if (forwardDirection) {
-        // For forward motion, we need to reverse the phase progression
         segmentPhase = (NUM_HORIZONTAL - 1 - horizontalIndex) * radians(phaseOffset);
       } else {
-        // For backward motion, use the original phase progression
         segmentPhase = horizontalIndex * radians(phaseOffset);
       }
       
-      // Calculate servo angle with full amplitude
       float angle = centerPosition + amplitude * sin(timeScale + segmentPhase);
-      
       servos[i].write(angle);
       horizontalIndex++;
     } else {  // Vertical servos remain centered
@@ -447,9 +362,7 @@ void updateServosSidewinding() {
       servos[i].write(angle);
       horizontalIndex++;
     } else {  // Vertical servos
-      // Adjust the vertical wave phase based on direction as well
       float basePhase = verticalIndex * phaseOffset + verticalPhaseOffset;
-      // You might need to experiment with this part to get the right behavior
       float phase = forwardDirection ? 
         radians((NUM_SERVOS - NUM_HORIZONTAL - 1 - verticalIndex) * phaseOffset + verticalPhaseOffset) : 
         radians(basePhase);
@@ -477,30 +390,27 @@ void handleSetParameters() {
     } else if (action == "forward") {
       locomotionEnabled = true;
       forwardDirection = true;
-      startLogging(); // Start logging when forward movement begins
-      response = "Forward motion enabled (logging for 10 seconds)";
+      rattlingActive = false;
+      response = "Forward motion enabled";
+    } else if (action == "rattle") {
+      rattleTail();
+      response = "🐍 RATTLING INITIATED! Body will curl once, tail will rattle intensely for 5 seconds! 🐍";
     } else if (action == "backward") {
       locomotionEnabled = true;
       forwardDirection = false;
-      startLogging(); // Start logging when backward movement begins
-      response = "Backward motion enabled (logging for 10 seconds)";
+      rattlingActive = false;
+      response = "Backward motion enabled";
     } else if (action == "stop") {
       locomotionEnabled = false;
-      loggingEnabled = false; // Stop logging when movement stops
+      rattlingActive = false;
       centerAllServos();
       response = "Stopped and centered";
     } else if (action == "test") {
       testingActive = true;
+      rattlingActive = false;
       testServoIndex = 0;
       testPosition = 0;
       response = "Starting servo test...";
-    } else if (action == "logIdle") {
-      // Make sure the robot is not moving
-      locomotionEnabled = false;
-      testingActive = false;
-      // Start logging while in idle state
-      startLogging();
-      response = "Logging idle state for 10 seconds";
     }
   }
 
@@ -522,47 +432,35 @@ void handleSetParameters() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(analogPin, INPUT);
-  analogReadResolution(12); // ESP32 has 12-bit ADC
-  // Calibrate sensor
-  Serial.println("Calibrating current sensor...");
-  uint16_t midPoint = sensor.autoMidPoint();
-  Serial.printf("Midpoint value: %d\n", midPoint);
-
-  // Initialize SPIFFS
-  if(!SPIFFS.begin(true)) {
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
-  Serial.println("SPIFFS mounted successfully");
+  
   // Initialize all servos
   for (int i = 0; i < NUM_SERVOS; i++) {
     servos[i].attach(servoPins[i]);
     servos[i].write(centerPosition);
   }
-  delay(1000);  // Allow servos to reach center position
 
   // Setup WiFi Access Point
   WiFi.softAP("ESP32_Snake", "12345678");
-  Serial.println("Access Point Started");
+  Serial.println("🐍 Snake Robot Access Point Started");
   Serial.print("IP Address: ");
   Serial.println(WiFi.softAPIP());
 
   // Setup server handlers
   server.on("/", HTTP_GET, handleRoot);
   server.on("/", HTTP_POST, handleSetParameters);
-  server.on("/current", HTTP_GET, handleCurrentData);  
-  server.on("/download", HTTP_GET, handleDownload);
-  server.on("/clearlog", HTTP_GET, handleClearLog);
   server.begin();
-  Serial.println("HTTP server started");
+  Serial.println("HTTP server started - Ready to rattle! 🐍");
 }
 
 void loop() {
   server.handleClient();
   
-  // Handle servo operations
-  if (testingActive) {
+  // Handle rattling with highest priority
+  if (rattlingActive) {
+    updateTailRattle();
+  }
+  // Handle servo operations only if not rattling
+  else if (testingActive) {
     handleServoTest();
   }
   else if (locomotionEnabled && (millis() - lastUpdate >= interval)) {
@@ -572,26 +470,5 @@ void loop() {
       updateServosSidewinding();
     }
     lastUpdate = millis();
-  }
-  
-  // Handle logging at fixed intervals
-  if (loggingEnabled) {
-    // Check if logging duration has expired
-    if (millis() - loggingStartTime >= LOGGING_DURATION) {
-      loggingEnabled = false;
-      Serial.println("Logging stopped after 10 seconds");
-    } 
-    // Log at fixed intervals
-    else if (millis() - lastLogTime >= LOGGING_INTERVAL) {
-      // Take a current reading
-      float current = 0.0;
-      for(int i = 0; i < 5; i++) { // Take fewer samples for speed
-        current += abs(sensor.mA_DC());
-      }
-      current = (current / 5.0) / 1000.0;  // Convert to Amps
-      
-      logCurrentData(current);
-      lastLogTime = millis();
-    }
   }
 }
